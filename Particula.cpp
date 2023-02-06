@@ -98,7 +98,10 @@ int main()
 
     OpenGLAPI::Texture Textura2(height, width);
     
-    ParticleAPI::ParticleObject Particula(700.,600.,-200.,100., 10., 2., 50.,inputManager->getTime(), shader, &Textura,width, height);
+    ParticleAPI::ParticleObject Particula(10., 2., 50.,inputManager->getTime(), shader, &Textura,20., 20.);
+    ParticleAPI::Particle ParticleSpawner(300., 400.,&Particula, 10, 200.,0., 360);
+    std::cout << "BACK AT MAIN" << std::endl;
+    //Particula.spawn(300., 400.,200.,0.);
 
     int * Resolution = (int*) malloc(sizeof(int)*2);
 
@@ -117,7 +120,8 @@ int main()
 
         //std::cout << "TIME: " <<inputManager->getTime()<< std::endl;
         
-        Particula.draw(800,600, after-current, current);
+        //Particula.draw(800,600, after-current, current);
+        ParticleSpawner.Update(800,600, after-current, current);
 
         current = after;
         after = inputManager->getTime();

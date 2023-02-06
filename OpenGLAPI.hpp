@@ -160,8 +160,6 @@ namespace OpenGLAPI{
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-            std::cout<< "HELLO" << std::endl;
-
             this->Height = Height;
             this->Width = Width;
 
@@ -203,14 +201,11 @@ namespace OpenGLAPI{
             glGenVertexArrays(1,&quadVAO);
         }
 
-        void draw(OpenGLAPI::Texture* texture,int resolutionX, int resolutionY, float x, float y, float opacity){
+        void draw(OpenGLAPI::Texture* texture,int resolutionX, int resolutionY, float x, float y,float sizex,float sizey, float opacity){
             initRenderData();
             //glm::mat4
             this->shader->use();
             glm::mat4 model = glm::mat4(1.f);
-
-            int sizex = texture->getWidth();
-            int sizey = texture->getHeight();
 
             glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(resolutionX), 
             static_cast<float>(resolutionY), 0.0f, -1.0f, 1.0f);
@@ -218,7 +213,7 @@ namespace OpenGLAPI{
             std::cout << "(X,Y): " << x << ", " << y << std::endl;
 
             model = glm::translate(model,glm::vec3(resolutionX - x,resolutionY - y, 0.0f));
-            model = glm::scale(model, glm::vec3(50.f, 50.f, 1.0f));
+            model = glm::scale(model, glm::vec3(sizex, sizey, 1.0f));
 
             this->shader->setMat4("model", model);
             this->shader->setMat4("projection", projection);

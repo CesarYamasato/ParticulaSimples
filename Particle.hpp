@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <glm/glm.hpp>
+#include <cstdlib>
 #include "Shader.h"
 #include "OpenGLAPI.hpp"
 
@@ -63,7 +64,6 @@ namespace ParticleAPI{
 
         MoveableObject(float X = 0., float Y = 0.,float velX = 0, float velY = 0, float accX = 0,float accY = 0, float mass = 1){
             transform = new ParticleAPI::Transform(X,Y);
-            std::cout << X << "AQUI" << Y << std::endl;
             VelX = velX;
             VelY = velY;
             AccX = accX;
@@ -101,18 +101,13 @@ namespace ParticleAPI{
     };
 
     ////////////////////////////////////////////////////////////////////////
-    class ParticleObject : private MoveableObject{
+    class ParticleObject{
         public:
-        ParticleObject(float x, float y,float forceX, float forceY, float fadeIn,float fadeOut,float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
-        : MoveableObject(x, y)
+        ParticleObject(float fadeIn,float fadeOut,float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
         {
-            addForce(forceX, forceY);
+            std::cout << "NEW PARTICLE" << std::endl;
             SpawnTime = time;
             TimeToLive = timeToLive;
-
-            glGenVertexArrays(1, &VAO);
-            glGenBuffers(1, &VBO);
-            glGenBuffers(1, &EBO);
 
             this->shader = shader;
             Texture = texture;
@@ -128,56 +123,36 @@ namespace ParticleAPI{
             first = true;
         }
 
+        ParticleObject * Clone(){
+            ParticleObject * returnP = new ParticleObject(FadeIn, FadeOut, TimeToLive, SpawnTime, shader, Texture, Height, Width);
+            return returnP;
+        }
+
+        ~ParticleObject(){
+            delete Object;
+            delete Renderer;
+        }
+
+        void spawn(float x, float y, float forceX, float forceY)
+        {
+            Object = new ParticleAPI::MoveableObject(x,y);
+            Object->addForce(forceX, forceY);
+            std::cout<< "SPAWNING" << std::endl;
+        }
+
         void draw(int ResolutionX, int ResolutionY, float time, float currentTime){
-            float x = getX();
-            float y = getY();
+           if(!Object) return;
+            float x = Object->getX();
+            float y = Object->getY();
             float opacity = 1.0;
             if(currentTime <= FadeIn+SpawnTime) opacity = 1.0-((FadeIn + SpawnTime -currentTime)/FadeIn);
             else if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((SpawnTime + TimeToLive - FadeOut + currentTime)/FadeOut);
-            /*float vertices [] = {
-                x, y,
-                x, y-Height,
-                x-Width, y-Height,
-                x-Width, y
-            };
 
-            std::cout << "opacity: " << opacity << "(X,Y): "<< x/ResolutionX << "," << -y/ResolutionY <<std::endl;
-            glBindVertexArray(VAO);
-
-            glBindBuffer(GL_ARRAY_BUFFER,VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STREAM_DRAW);
-
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ParticleAPI::SquareIndices),ParticleAPI::SquareIndices, GL_STREAM_DRAW);
-
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float),(void *)0 );
-            glEnableVertexAttribArray(0);
-
-            shader->use();
-            shader->setVec2("Resolution",ResolutionX, ResolutionY);
-            shader->setVec2("TextResolution", Width,Height);
-            shader->setFloat("Opacity", opacity);
+            Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, opacity);
             
-            glActiveTexture(GL_TEXTURE0);
-            Texture->bind();
-
-            shader->setSampler("Texture",0);
-
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,0);
-
-            glBindTexture(GL_TEXTURE_2D,0);
-
-            glBindVertexArray(0);
-
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);*/
-
-            Renderer->draw(Texture,ResolutionX, ResolutionY,x,y, opacity);
-
-            
-            addVel(time);
-            addForce(0.f,-10.f);
-            move(time);
+            Object->addVel(time);
+            Object->addForce(0.f,-10.f);
+            Object->move(time);
 
             first = false;
         }
@@ -187,28 +162,39 @@ namespace ParticleAPI{
         bool first;
         float FadeIn, FadeOut, SpawnTime, TimeToLive;
         Shader * shader;
+        ParticleAPI::MoveableObject* Object;
         OpenGLAPI::Texture * Texture;
         OpenGLAPI::SpriteRenderer * Renderer;
-        unsigned int VBO, VAO, EBO;
     };
 
     
-    class Particle : private MoveableObject{
+    class Particle{
         public:
-        Particle(int quantity, int width, int height, float forceX, float forceY , float fadeIn, float fadeOut, float timeToLive, float angle, const char * texture, float x = 0, float y = 0, RENDER_TYPE = RENDER_TYPE::RECTANGLE){
-            std::string path = "/home/cesar/Documentos/OpenGL/Particula/Shaders/";
-            std::string vertexPath = path + "ParticleVertex";
-            std::string fragmentPath = path + "ParticleFragment";
-            shader = new Shader(vertexPath.c_str(), fragmentPath.c_str());
+        Particle(float x, float y, ParticleObject * particle, int quantity, float forceX, float forceY, int angle){
+            for(int i = 0;i < quantity; i++){
+                ParticleObject * ParticleInsert = particle->Clone();
+                int angleInsert = rand()%(angle+10) + 10;
+                float forceR = glm::sqrt(forceX*forceX + forceY*forceY);
+                float forceXR = glm::sin(angleInsert)*forceR;
+                float forceYR = glm::cos(angleInsert)*forceR;
+                ParticleInsert->spawn(x,y,forceXR,forceYR);
+                list.insert(list.begin(),ParticleInsert);
+                std::cout << "HELLO" << i << std::endl;
+            }
+            std::cout << "OUTSIDE" << std::endl;
         }
 
-        Particle(int quantity, int width, int height,  float forceX, float forceY, float fadeIn, float fadeOut, float timeToLive, float angle, COLOR = COLOR::RED, float x = 0, float y = 0, RENDER_TYPE = RENDER_TYPE::RECTANGLE){
-
+        void Update(float ResolutionX,float ResolutionY, float time, float currentTime){
+            std::list<ParticleAPI::ParticleObject*>::iterator it;
+            for(it = list.begin(); it != list.end(); ++it){
+                (*it)->draw(ResolutionX, ResolutionY, time, currentTime);
+            }
         }
 
         private:
+
         int Width,Height;
         float Force, FadeIn, FadeOut, TimeToLive, Angle;
-        Shader * shader;
+        std::list<ParticleObject*> list;
     };
 }
