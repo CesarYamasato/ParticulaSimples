@@ -105,7 +105,6 @@ namespace ParticleAPI{
         public:
         ParticleObject(float fadeIn,float fadeOut,float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
         {
-            std::cout << "NEW PARTICLE" << std::endl;
             SpawnTime = time;
             TimeToLive = timeToLive;
 
@@ -137,7 +136,6 @@ namespace ParticleAPI{
         {
             Object = new ParticleAPI::MoveableObject(x,y);
             Object->addForce(forceX, forceY);
-            std::cout<< "SPAWNING" << std::endl;
         }
 
         void draw(int ResolutionX, int ResolutionY, float time, float currentTime){
@@ -171,17 +169,18 @@ namespace ParticleAPI{
     class Particle{
         public:
         Particle(float x, float y, ParticleObject * particle, int quantity, float forceX, float forceY, int angle){
+            srand(time(0));
             for(int i = 0;i < quantity; i++){
                 ParticleObject * ParticleInsert = particle->Clone();
-                int angleInsert = rand()%(angle+10) + 10;
+                float angleInsert = static_cast<float>((rand()%angle));
+                angleInsert = glm::radians(angleInsert);
                 float forceR = glm::sqrt(forceX*forceX + forceY*forceY);
                 float forceXR = glm::sin(angleInsert)*forceR;
                 float forceYR = glm::cos(angleInsert)*forceR;
+                std::cout << "Force:"<< forceR<< ", "<< forceYR<< std::endl;
                 ParticleInsert->spawn(x,y,forceXR,forceYR);
                 list.insert(list.begin(),ParticleInsert);
-                std::cout << "HELLO" << i << std::endl;
             }
-            std::cout << "OUTSIDE" << std::endl;
         }
 
         void Update(float ResolutionX,float ResolutionY, float time, float currentTime){

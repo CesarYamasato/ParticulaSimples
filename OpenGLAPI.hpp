@@ -209,8 +209,6 @@ namespace OpenGLAPI{
 
             glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(resolutionX), 
             static_cast<float>(resolutionY), 0.0f, -1.0f, 1.0f);
-            
-            std::cout << "(X,Y): " << x << ", " << y << std::endl;
 
             model = glm::translate(model,glm::vec3(resolutionX - x,resolutionY - y, 0.0f));
             model = glm::scale(model, glm::vec3(sizex, sizey, 1.0f));
