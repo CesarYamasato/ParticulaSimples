@@ -75,6 +75,10 @@ namespace ParticleAPI{
             transform->move(VelX*time,VelY*time);
         }
 
+        void move(float x, float y){
+            transform->move(x,y);
+        }
+
         void addVel(float time){
             VelX += AccX*time;
             VelY += AccY*time;
@@ -101,9 +105,41 @@ namespace ParticleAPI{
     };
 
     ////////////////////////////////////////////////////////////////////////
-    class ParticleObject{
+    class ParticleObject : protected MoveableObject{
         public:
-        ParticleObject(float fadeIn,float fadeOut,float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+        ParticleObject(float x, float y, float forceX, float forceY, float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+        {
+            SpawnTime = time;
+            TimeToLive = timeToLive;
+
+            this->shader = shader;
+            Texture = texture;
+
+            this->Renderer = new OpenGLAPI::SpriteRenderer(shader);
+
+            Width = width;
+            Height = height;
+        }
+
+        ~ParticleObject(){
+            delete Renderer;
+        }
+
+        virtual void draw(int ResolutionX, int ResolutionY, float time, float currentTime) = 0;
+
+        virtual void move(float time) = 0;
+
+        protected:
+        int Width,Height;
+        float SpawnTime, TimeToLive;
+        Shader * shader;
+        OpenGLAPI::Texture * Texture;
+        OpenGLAPI::SpriteRenderer * Renderer;
+    };
+
+    class FireParticle : public ParticleObject{
+        FireParticle(float x, float y, float forceX, float forceY, float fadeIn,float fadeOut,float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+        : ParticleObject(x,y,forceX,forceY, timeToLive, time, shader, texture, height, width)
         {
             SpawnTime = time;
             TimeToLive = timeToLive;
@@ -118,62 +154,31 @@ namespace ParticleAPI{
 
             Width = width;
             Height = height;
-
-            first = true;
-        }
-
-        ParticleObject * Clone(){
-            ParticleObject * returnP = new ParticleObject(FadeIn, FadeOut, TimeToLive, SpawnTime, shader, Texture, Height, Width);
-            return returnP;
-        }
-
-        ~ParticleObject(){
-            delete Object;
-            delete Renderer;
-        }
-
-        void spawn(float x, float y, float forceX, float forceY)
-        {
-            Object = new ParticleAPI::MoveableObject(x,y);
-            Object->addForce(forceX, forceY);
         }
 
         void draw(int ResolutionX, int ResolutionY, float time, float currentTime){
-           if(!Object) return;
-            float x = Object->getX();
-            float y = Object->getY();
+            float x = getX();
+            float y = getY();
             float opacity = 1.0;
             if(currentTime <= FadeIn+SpawnTime) opacity = 1.0-((FadeIn + SpawnTime -currentTime)/FadeIn);
             else if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((SpawnTime + TimeToLive - FadeOut + currentTime)/FadeOut);
 
             Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, opacity);
-
-            first = false;
-        }
-
-        void move(float time){
-            Object->addVel(time);
-            Object->addForce(0.f,-30.f);
-            Object->move(time);
         }
 
         private:
-        int Width,Height;
-        bool first;
-        float FadeIn, FadeOut, SpawnTime, TimeToLive;
-        Shader * shader;
-        ParticleAPI::MoveableObject* Object;
-        OpenGLAPI::Texture * Texture;
-        OpenGLAPI::SpriteRenderer * Renderer;
+
+        float FadeIn, FadeOut;
+
     };
 
     
     class Particle{
         public:
-        Particle(float x, float y, ParticleObject * particle, int quantity, float forceX, float forceY, int angle){
+        Particle(float x, float y, int quantity, float forceX, float forceY, int angle){
             srand(time(0));
             for(int i = 0;i < quantity; i++){
-                ParticleObject * ParticleInsert = particle->Clone();
+                ParticleObject * ParticleInsert = new ParticleObject();
                 float forceR;
                 getForce(forceR, forceX, forceY, angle);
                 ParticleInsert->spawn(x,y,forceX,forceY);

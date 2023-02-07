@@ -203,7 +203,6 @@ namespace OpenGLAPI{
 
         void draw(OpenGLAPI::Texture* texture,int resolutionX, int resolutionY, float x, float y,float sizex,float sizey, float opacity){
             initRenderData();
-            //glm::mat4
             this->shader->use();
             glm::mat4 model = glm::mat4(1.f);
 
