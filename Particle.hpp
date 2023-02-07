@@ -147,12 +147,14 @@ namespace ParticleAPI{
             else if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((SpawnTime + TimeToLive - FadeOut + currentTime)/FadeOut);
 
             Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, opacity);
-            
-            Object->addVel(time);
-            Object->addForce(0.f,-10.f);
-            Object->move(time);
 
             first = false;
+        }
+
+        void move(float time){
+            Object->addVel(time);
+            Object->addForce(0.f,-30.f);
+            Object->move(time);
         }
 
         private:
@@ -172,13 +174,9 @@ namespace ParticleAPI{
             srand(time(0));
             for(int i = 0;i < quantity; i++){
                 ParticleObject * ParticleInsert = particle->Clone();
-                float angleInsert = static_cast<float>((rand()%angle));
-                angleInsert = glm::radians(angleInsert);
-                float forceR = glm::sqrt(forceX*forceX + forceY*forceY);
-                float forceXR = glm::sin(angleInsert)*forceR;
-                float forceYR = glm::cos(angleInsert)*forceR;
-                std::cout << "Force:"<< forceR<< ", "<< forceYR<< std::endl;
-                ParticleInsert->spawn(x,y,forceXR,forceYR);
+                float forceR;
+                getForce(forceR, forceX, forceY, angle);
+                ParticleInsert->spawn(x,y,forceX,forceY);
                 list.insert(list.begin(),ParticleInsert);
             }
         }
@@ -191,6 +189,14 @@ namespace ParticleAPI{
         }
 
         private:
+
+        void getForce(float &forceR, float &forceX, float& forceY, int angle){
+            float angleInsert = static_cast<float>((rand()%angle));
+            angleInsert = glm::radians(angleInsert);
+            forceR = glm::sqrt(forceX*forceX + forceY*forceY);
+            forceX = glm::sin(angleInsert)*forceR;
+            forceY = glm::cos(angleInsert)*forceR;
+        }
 
         int Width,Height;
         float Force, FadeIn, FadeOut, TimeToLive, Angle;

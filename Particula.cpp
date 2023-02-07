@@ -99,7 +99,7 @@ int main()
     OpenGLAPI::Texture Textura2(height, width);
     
     ParticleAPI::ParticleObject Particula(10., 2., 50.,inputManager->getTime(), shader, &Textura,20., 20.);
-    ParticleAPI::Particle ParticleSpawner(300., 400.,&Particula, 5, 500.,0., 70);
+    ParticleAPI::Particle ParticleSpawner(300., 400.,&Particula, 5, 500.,500., 70);
     std::cout << "BACK AT MAIN" << std::endl;
     //Particula.spawn(300., 400.,200.,0.);
 
