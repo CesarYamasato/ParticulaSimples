@@ -1,3 +1,5 @@
+#ifndef OPENGLAPI_HPP
+#define OPENGLAPI_HPP
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -8,25 +10,6 @@
 void MessageCallback( GLenum source, GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar* message,const void* userParam );
 
 namespace OpenGLAPI{
-
-    ////////////////////////////////////////////////////////////////////////
-    unsigned int SquareIndices[] = {
-        0,1,3,
-        1,2,3
-    };
-
-    float vertices[] = { 
-        // pos      // tex
-        0.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f, 
-    
-        0.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 0.0f
-    };
-
-
     //Classe responsável por manejar input/informações externas ao programa
     class InputManager{
         public:
@@ -59,6 +42,12 @@ namespace OpenGLAPI{
 
         float getTime(){
             return time;
+        }
+
+        double * getMouse(){
+            double * array = (double*) malloc(sizeof(double)*4);
+            for (int i = 0; i < 4; i++) array[i] = mouse[i];
+            return array;
         }
 
         private:
@@ -119,7 +108,7 @@ namespace OpenGLAPI{
 
     //Classe responsável por ativar e desativar mensagens de debug
 
-    class DebugManager
+    /*class DebugManager
     {
         public:
 
@@ -143,7 +132,7 @@ namespace OpenGLAPI{
         glEnable(GL_DEBUG_OUTPUT );
         glDebugMessageCallback(MessageCallback, 0 );
         }
-    };
+    };*/
 
 
     //Classe para texturas
@@ -202,6 +191,7 @@ namespace OpenGLAPI{
         SpriteRenderer(Shader * shader){
             this->shader = shader;
             glGenVertexArrays(1,&quadVAO);
+            glGenBuffers(1, &VBO);
         }
 
         void draw(OpenGLAPI::Texture* texture,int resolutionX, int resolutionY, float x, float y,float sizex,float sizey, float opacity){
@@ -217,7 +207,7 @@ namespace OpenGLAPI{
 
             this->shader->setMat4("model", model);
             this->shader->setMat4("projection", projection);
-            this->shader->setFloat("opacity", opacity);
+            this->shader->setFloat("Opacity", opacity);
 
             glActiveTexture(GL_TEXTURE0);
             texture->bind();
@@ -233,10 +223,10 @@ namespace OpenGLAPI{
         private:
         Shader * shader;
         unsigned int quadVAO;
+        unsigned int VBO;
 
         void initRenderData(){
             // configure VAO/VBO
-            unsigned int VBO;
             float vertices[] = { 
                 // pos      // tex
                 0.0f, 1.0f, 0.0f, 1.0f,
@@ -247,9 +237,6 @@ namespace OpenGLAPI{
                 1.0f, 1.0f, 1.0f, 1.0f,
                 1.0f, 0.0f, 1.0f, 0.0f
             };
-
-            glGenVertexArrays(1, &this->quadVAO);
-            glGenBuffers(1, &VBO);
             
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -263,7 +250,7 @@ namespace OpenGLAPI{
     };
 }
 
-void APIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam )
+/*void APIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam )
         {
         fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n", ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ), type, severity, message );
         switch (source)
@@ -296,4 +283,5 @@ void APIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum seve
                 case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
             } std::cout << std::endl;
             std::cout << std::endl;
-        }
+        }*/
+#endif

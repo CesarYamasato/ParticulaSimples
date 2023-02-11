@@ -12,6 +12,8 @@
 #include <cstdlib>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void MessageCallback( GLenum source, GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar* message,const void* userParam );
+
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -75,7 +77,7 @@ int main()
     std::string fragmentPath = path + "ParticleFragment.fs";
     shader = new Shader(vertexPath.c_str(), fragmentPath.c_str());        
 
-    std::string imagePath = "/home/cesar/Documentos/OpenGL/Particula/Skarmory.gif"; 
+    std::string imagePath = "/home/cesar/Documentos/OpenGL/Particula/orange.png"; 
     int width, height, nrChannels;
     unsigned char *data = stbi_load(imagePath.c_str(), &width, &height, &nrChannels, 0);   
 
@@ -83,9 +85,12 @@ int main()
 
     //Habilita mensagens de debug
 
-    OpenGLAPI::DebugManager* debugManager = nullptr;
-    debugManager = OpenGLAPI::DebugManager::getDebugManager();
+    //OpenGLAPI::DebugManager* debugManager = nullptr;
+    //debugManager = OpenGLAPI::DebugManager::getDebugManager();
     //debugManager->DisableDebug();
+
+    glEnable(GL_DEBUG_OUTPUT );
+    glDebugMessageCallback(MessageCallback, 0 );
 
     OpenGLAPI::InputManager * inputManager = nullptr;
     inputManager = OpenGLAPI::InputManager::getInputManager();
@@ -100,8 +105,9 @@ int main()
 
     ParticleAPI::ParticleManager* particleManager = ParticleAPI::ParticleManager::getParticleManager();
 
-    ParticleAPI::FireParticle Particula(2.0,2.0,20.0,shader, &Textura, 10.0,10.0);
-    ParticleAPI::ParticleSpawner particleSpawner(300., 400.,10,10., &Particula);
+    ParticleAPI::FireParticle Particula(5.0,5.0,10.0,shader, &Textura, 10.0,10.0);
+    ParticleAPI::ParticleSpawner* particleSpawner = new ParticleAPI::ParticleSpawner(300., 10.,10,30., &Particula);
+    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(200., 10.,10,30., &Particula);
     std::cout << "BACK AT MAIN" << std::endl;
     //Particula.spawn(300., 400.,200.,0.);
 
@@ -115,15 +121,20 @@ int main()
     while(!glfwWindowShouldClose(window)){
         //Coletando a informação da textura atualmente ativa e copiando para um espaço de memória
         inputManager->processInput(window);
+        double* mouse = inputManager->getMouse();
         Resolution = inputManager->getResolution();
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         //std::cout << "TIME: " <<inputManager->getTime()<< std::endl;
+
+        //std::cout << "MOUSE: " << ((mouse[0]+1)/2) << " " << ((mouse[1]+1)/2) << std::endl;
+
+        if(mouse[2]) new ParticleAPI::ParticleSpawner((1.-((mouse[0]+1)/2))*Resolution[0], ((1.-(mouse[1]+1)/2))*Resolution[1],10,5., &Particula);
         
-        //Particula.draw(800,600, after-current, current);
-        //ParticleSpawner.Update(800,600, after-current, current);
+        particleManager->Update(after-current);
+        particleManager->Draw(Resolution[0],Resolution[1]);
 
         current = after;
         after = inputManager->getTime();
@@ -143,3 +154,38 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
     printf("%i:%i\n", width,height);
 }
+
+void APIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam )
+        {
+        fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n", ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ), type, severity, message );
+        switch (source)
+            {
+                case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
+                case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
+                case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
+                case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
+                case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
+                case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
+            } std::cout << std::endl;
+            switch (type)
+            {
+                case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
+                case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
+                case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break; 
+                case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
+                case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
+                case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
+                case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
+                case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
+                case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
+            } std::cout << std::endl;
+
+            switch (severity)
+            {
+                case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
+                case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
+                case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
+                case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
+            } std::cout << std::endl;
+            std::cout << std::endl;
+        }

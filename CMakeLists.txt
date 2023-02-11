@@ -8,6 +8,6 @@ find_package(Boost 1.71.0 COMPONENTS regex)
 
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS}) 
-    add_executable(OpenGL stb_image/stb_image.cpp Shader.h Particle.hpp OpenGLAPI.hpp glad.c Particula.cpp) 
+    add_executable(OpenGL stb_image/stb_image.cpp Shader.h Particle.hpp Particle.cpp OpenGLAPI.hpp glad.c Particula.cpp) 
     target_link_libraries(OpenGL ${Boost_LIBRARIES} GL dl glfw)
 endif()

@@ -6,11 +6,6 @@
 #include "OpenGLAPI.hpp"
 #include "Particle.hpp"
 
-////////////////////////////////////////////////////////////////////////
-enum class RENDER_TYPE {RECTANGLE, CIRCLE, TRIANGLE};
-
-////////////////////////////////////////////////////////////////////////
-enum class COLOR {RED,BLUE,GREEN,YELLOW,PURPLE};
 
 using namespace ParticleAPI;
 
@@ -18,7 +13,7 @@ using namespace ParticleAPI;
     //TRANSFORM                                                                                 //
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    Transform::Transform(float x = 0, float y = 0){
+    Transform::Transform(float x, float y){
         this->x = x;
         this->y = y;
     }
@@ -40,7 +35,7 @@ using namespace ParticleAPI;
     //MOVEABLE OBJECT                                                                           //
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    MoveableObject::MoveableObject(float X = 0., float Y = 0.,float velX = 0, float velY = 0, float accX = 0,float accY = 0, float mass = 1){
+    MoveableObject::MoveableObject(float X, float Y,float velX, float velY, float accX,float accY, float mass){
         transform = new ParticleAPI::Transform(X,Y);
         VelX = velX;
         VelY = velY;
@@ -96,12 +91,14 @@ using namespace ParticleAPI;
     }
 
     ParticleObject::~ParticleObject(){
-        delete Renderer;
+        //delete Renderer;
     }
 
     bool ParticleObject::shoudlDie(){
         float time = OpenGLAPI::InputManager::getInputManager()->getTime();
-        return (SpawnTime + TimeToLive) < time;
+        bool shoulddie = (SpawnTime + TimeToLive) < time;
+        if(shoulddie) std::cout << "AE CARALHOOOO" << std::endl;
+        return shoulddie;
     }
 
     void ParticleObject::Draw(int ResolutionX, int ResolutionY) {
@@ -133,18 +130,18 @@ using namespace ParticleAPI;
         float opacity = 1.0;
         float currentTime = OpenGLAPI::InputManager::getInputManager()->getTime();
         if(currentTime <= FadeIn+SpawnTime) opacity = 1.0-((FadeIn + SpawnTime -currentTime)/FadeIn);
-        else if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((SpawnTime + TimeToLive - FadeOut + currentTime)/FadeOut);
+        else if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((currentTime - (SpawnTime + TimeToLive - FadeOut))/FadeOut);
 
         Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, opacity);
     }
 
     void FireParticle::Move(float deltaTime){
         int time = static_cast<int>(OpenGLAPI::InputManager::getInputManager()->getTime());
-        srand(time);
-        int random = rand()%2;
-        int signal = (rand()%2) - 1;
-        if(signal == 0) signal = 1;
-        MoveableObject::move(random*Width*signal, Height);
+            int random = rand()%2;
+            int signal = (rand()%2) - 1;
+            if(signal == 0) signal = 1;
+            MoveableObject::move(random*10*Width*signal*deltaTime, Height*deltaTime*2);
+            LastSpawn = time;
     }
 
     ParticleObject* FireParticle::Spawn(float x, float y){
@@ -172,7 +169,9 @@ using namespace ParticleAPI;
     void ParticleSpawner::Update(float deltaTime){
         for(it = list.begin(); it != list.end(); ++it){
             if((*it)->shoudlDie()){
-                list.erase(it);
+                delete(*it);
+                list.erase(it++);
+                continue;
             }
             (*it)->Move(deltaTime);
         }
@@ -184,22 +183,33 @@ using namespace ParticleAPI;
         }
     }
 
-    void ParticleSpawner::checkTimeToLive(){
+    bool ParticleSpawner::checkTimeToLive(){
         float time = OpenGLAPI::InputManager::getInputManager()->getTime();
-        if((SpawnTime + TimeToLive) < time) delete(this);
+        return ((SpawnTime + TimeToLive) < time);
     }
 
     void ParticleSpawner::Spawn(){
         float time = OpenGLAPI::InputManager::getInputManager()->getTime();
-        if(time > LastSpawn + 2) list.push_front(Particle->Spawn(x,y));
+        if(time > LastSpawn + 0.3) {
+            std::cout << "hello3" << std::endl;
+            list.push_front(Particle->Spawn(x,y));
+            LastSpawn = time;
+        }
     }
 
-    ParticleSpawner::~ParticleSpawner(){
-        ParticleManager::getParticleManager()->deleteSpawner(this);
+    void ParticleSpawner::print(){
+        std::cout << "ID: " << ID << std::endl;
     }
+
+    //ParticleSpawner::~ParticleSpawner(){
+      //  std::cout << "DELETADO IRMÃO" << std::endl;
+        //ParticleManager::getParticleManager()->deleteSpawner(this);
+    //}
 
     bool ParticleSpawner::operator == (ParticleSpawner * other){
-        return this->ID == other->ID;
+        bool returnVal = (this->ID == other->ID);
+        std::cout << "CONFERIDO IRMÃO" << std::endl;
+        return returnVal;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,8 +230,10 @@ using namespace ParticleAPI;
     }
 
     //Function that is called everytime a ParticleSpawner is deleted
-    void ParticleManager::deleteSpawner(ParticleSpawner* spawner){
-        list.remove(spawner);
+    void ParticleManager::deleteSpawner(std::list<ParticleSpawner*>::iterator& spawner){
+        std::cout << "REMOVIDO IRMÃO" << std::endl;
+        delete(*spawner);
+        list.erase(spawner++);
         quantity--;
     }
 
@@ -229,8 +241,15 @@ using namespace ParticleAPI;
     void ParticleManager::Update(float deltaTime){
         std::list<ParticleSpawner*>::iterator it;
         for(it = list.begin(); it != list.end(); ++it){
-            (*it)->Update(deltaTime);
-            (*it)->checkTimeToLive();
+            if(quantity){
+                if((*it)->checkTimeToLive()){ 
+                    deleteSpawner(it);
+                    continue;
+                }
+                (*it)->Spawn();
+                (*it)->Update(deltaTime);
+            }
+            else break;
         }
     }
 
