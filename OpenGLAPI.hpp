@@ -51,7 +51,9 @@ namespace OpenGLAPI{
         }
 
         int * getResolution(){
-            int array[] = {width, height};
+            int * array = (int*) malloc(sizeof(int)*2); 
+            array[0] = width;
+            array[1] = height;
             return array;
         }
 
@@ -102,7 +104,8 @@ namespace OpenGLAPI{
         }
 
         void getInputArray(){
-            void * array = malloc(sizeof(double*)*6 + sizeof(bool)*2 + sizeof(float));
+            static void * array = nullptr;
+            if(!array)array = malloc(sizeof(double*)*6 + sizeof(bool)*2 + sizeof(float));
             *(bool*) array = shouldDraw;
             *(bool*) (array + sizeof(bool)) = press;
             for(int i = 0; i < 4; i++) *(double *) (array + sizeof(double)*i + 2*sizeof(bool)) = mouse[i];

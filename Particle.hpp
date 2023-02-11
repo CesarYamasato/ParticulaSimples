@@ -45,20 +45,6 @@ namespace ParticleAPI{
     };
 
     ////////////////////////////////////////////////////////////////////////
-    class Collider{
-
-    };
-
-    ////////////////////////////////////////////////////////////////////////
-    class GameObject{
-        public:
-
-        GameObject(float x =0, float y =0){
-            
-        }
-    };
-
-    ////////////////////////////////////////////////////////////////////////
     class MoveableObject{
         public:
 
@@ -104,10 +90,97 @@ namespace ParticleAPI{
         Transform * transform;
     };
 
-    ////////////////////////////////////////////////////////////////////////
+    class ParticleManager{
+        public:
+
+        static ParticleManager * getParticleManager(){
+            static ParticleManager* manager = nullptr;
+            if(!manager) manager = new ParticleManager();
+            return manager;
+        }
+
+        //Function that is called everytime a ParticleSpawner is created 
+        int Insert(ParticleSpawner* spawner){
+            list.insert(list.begin(), spawner);
+            quantity++;
+        }
+
+        //Function that is called everytime a ParticleSpawner is deleted
+        void deleteSpawner(ParticleSpawner* spawner){
+            list.remove(spawner);
+            quantity--;
+        }
+
+        //Function that is called every frame in order to update position
+        void Update(float deltaTime){
+            std::list<ParticleSpawner*>::iterator it;
+            for(it = list.begin(); it != list.end(); ++it){
+                (*it)->Update(deltaTime);
+            }
+        }
+
+        //Function that is called every frame in order to draw the particles
+        void Draw(int ResolutionX,int ResolutionY){
+            std::list<ParticleSpawner*>::iterator it;
+            for(it = list.begin(); it != list.end(); ++it){
+                (*it)->Draw(ResolutionX,ResolutionY);
+            }
+        }
+
+        private:
+        int quantity;
+        std::list<ParticleSpawner*> list;
+
+        ParticleManager(){
+            quantity = 0;
+        }
+    };
+
+    //Class that receives a particle and spawns particles of that same type
+    class ParticleSpawner{
+        public:
+        ParticleSpawner(float x, float y, int quantity, float timeToLive){
+            ID = ParticleManager::getParticleManager()->Insert(this);
+        }
+
+        virtual void Update(float deltaTime){
+            for(it = list.begin(); it != list.end(); ++it){
+                if((*it)->shoudlDie()){
+                    list.erase(it);
+                }
+                (*it)->Move(deltaTime);
+            }
+        }
+
+        virtual void Draw(int ResolutionX,int ResolutionY){
+            for(it = list.begin(); it != list.end(); ++it){
+                (*it)->Draw(ResolutionX, ResolutionY);
+            }
+        }
+
+        virtual void Spawn() = 0;
+
+        ~ParticleSpawner(){
+            ParticleManager::getParticleManager()->deleteSpawner(this);
+        }
+
+        bool operator == (ParticleSpawner * other){
+            return this->ID == other->ID;
+        }
+
+        private:
+        int ID;
+        int Width,Height;
+        float Angle, TimeToLive;
+        std::list<ParticleObject*> list;
+        std::list<ParticleObject*>::iterator it;
+        
+    };
+
+    //Particle object class
     class ParticleObject : protected MoveableObject{
         public:
-        ParticleObject(float x, float y, float forceX, float forceY, float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+        ParticleObject(float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
         {
             SpawnTime = time;
             TimeToLive = timeToLive;
@@ -125,11 +198,21 @@ namespace ParticleAPI{
             delete Renderer;
         }
 
-        virtual void draw(int ResolutionX, int ResolutionY, float time, float currentTime) = 0;
+        bool shoudlDie(){
+            float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+            return (SpawnTime + TimeToLive) < time;
+        }
 
-        virtual void move(float time) = 0;
+        virtual void Draw(int ResolutionX, int ResolutionY) = 0;
+
+        virtual void Move(float time) = 0;
+
+        bool operator == (ParticleObject* other){
+            return this->ID == other->ID;
+        }
 
         protected:
+        int ID;
         int Width,Height;
         float SpawnTime, TimeToLive;
         Shader * shader;
@@ -139,7 +222,7 @@ namespace ParticleAPI{
 
     class FireParticle : public ParticleObject{
         FireParticle(float x, float y, float forceX, float forceY, float fadeIn,float fadeOut,float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
-        : ParticleObject(x,y,forceX,forceY, timeToLive, time, shader, texture, height, width)
+        : ParticleObject(timeToLive, time, shader, texture, height, width)
         {
             SpawnTime = time;
             TimeToLive = timeToLive;
@@ -156,10 +239,11 @@ namespace ParticleAPI{
             Height = height;
         }
 
-        void draw(int ResolutionX, int ResolutionY, float time, float currentTime){
+        void Draw (int ResolutionX, int ResolutionY) override{
             float x = getX();
             float y = getY();
             float opacity = 1.0;
+            float currentTime = OpenGLAPI::InputManager::getInputManager()->getTime();
             if(currentTime <= FadeIn+SpawnTime) opacity = 1.0-((FadeIn + SpawnTime -currentTime)/FadeIn);
             else if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((SpawnTime + TimeToLive - FadeOut + currentTime)/FadeOut);
 
@@ -170,41 +254,5 @@ namespace ParticleAPI{
 
         float FadeIn, FadeOut;
 
-    };
-
-    
-    class Particle{
-        public:
-        Particle(float x, float y, int quantity, float forceX, float forceY, int angle){
-            srand(time(0));
-            for(int i = 0;i < quantity; i++){
-                ParticleObject * ParticleInsert = new ParticleObject();
-                float forceR;
-                getForce(forceR, forceX, forceY, angle);
-                ParticleInsert->spawn(x,y,forceX,forceY);
-                list.insert(list.begin(),ParticleInsert);
-            }
-        }
-
-        void Update(float ResolutionX,float ResolutionY, float time, float currentTime){
-            std::list<ParticleAPI::ParticleObject*>::iterator it;
-            for(it = list.begin(); it != list.end(); ++it){
-                (*it)->draw(ResolutionX, ResolutionY, time, currentTime);
-            }
-        }
-
-        private:
-
-        void getForce(float &forceR, float &forceX, float& forceY, int angle){
-            float angleInsert = static_cast<float>((rand()%angle));
-            angleInsert = glm::radians(angleInsert);
-            forceR = glm::sqrt(forceX*forceX + forceY*forceY);
-            forceX = glm::sin(angleInsert)*forceR;
-            forceY = glm::cos(angleInsert)*forceR;
-        }
-
-        int Width,Height;
-        float Force, FadeIn, FadeOut, TimeToLive, Angle;
-        std::list<ParticleObject*> list;
     };
 }
