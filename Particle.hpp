@@ -90,98 +90,12 @@ namespace ParticleAPI{
         Transform * transform;
     };
 
-    class ParticleManager{
-        public:
-
-        static ParticleManager * getParticleManager(){
-            static ParticleManager* manager = nullptr;
-            if(!manager) manager = new ParticleManager();
-            return manager;
-        }
-
-        //Function that is called everytime a ParticleSpawner is created 
-        int Insert(ParticleSpawner* spawner){
-            list.insert(list.begin(), spawner);
-            quantity++;
-        }
-
-        //Function that is called everytime a ParticleSpawner is deleted
-        void deleteSpawner(ParticleSpawner* spawner){
-            list.remove(spawner);
-            quantity--;
-        }
-
-        //Function that is called every frame in order to update position
-        void Update(float deltaTime){
-            std::list<ParticleSpawner*>::iterator it;
-            for(it = list.begin(); it != list.end(); ++it){
-                (*it)->Update(deltaTime);
-            }
-        }
-
-        //Function that is called every frame in order to draw the particles
-        void Draw(int ResolutionX,int ResolutionY){
-            std::list<ParticleSpawner*>::iterator it;
-            for(it = list.begin(); it != list.end(); ++it){
-                (*it)->Draw(ResolutionX,ResolutionY);
-            }
-        }
-
-        private:
-        int quantity;
-        std::list<ParticleSpawner*> list;
-
-        ParticleManager(){
-            quantity = 0;
-        }
-    };
-
-    //Class that receives a particle and spawns particles of that same type
-    class ParticleSpawner{
-        public:
-        ParticleSpawner(float x, float y, int quantity, float timeToLive){
-            ID = ParticleManager::getParticleManager()->Insert(this);
-        }
-
-        virtual void Update(float deltaTime){
-            for(it = list.begin(); it != list.end(); ++it){
-                if((*it)->shoudlDie()){
-                    list.erase(it);
-                }
-                (*it)->Move(deltaTime);
-            }
-        }
-
-        virtual void Draw(int ResolutionX,int ResolutionY){
-            for(it = list.begin(); it != list.end(); ++it){
-                (*it)->Draw(ResolutionX, ResolutionY);
-            }
-        }
-
-        virtual void Spawn() = 0;
-
-        ~ParticleSpawner(){
-            ParticleManager::getParticleManager()->deleteSpawner(this);
-        }
-
-        bool operator == (ParticleSpawner * other){
-            return this->ID == other->ID;
-        }
-
-        private:
-        int ID;
-        int Width,Height;
-        float Angle, TimeToLive;
-        std::list<ParticleObject*> list;
-        std::list<ParticleObject*>::iterator it;
-        
-    };
-
     //Particle object class
     class ParticleObject : protected MoveableObject{
         public:
-        ParticleObject(float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+        ParticleObject(float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
         {
+            float time = OpenGLAPI::InputManager::getInputManager()->getTime();
             SpawnTime = time;
             TimeToLive = timeToLive;
 
@@ -203,9 +117,15 @@ namespace ParticleAPI{
             return (SpawnTime + TimeToLive) < time;
         }
 
-        virtual void Draw(int ResolutionX, int ResolutionY) = 0;
+        virtual void Draw(int ResolutionX, int ResolutionY) {
+            float x = getX();
+            float y = getY();
+             Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, 1.0);
+        }
 
-        virtual void Move(float time) = 0;
+        virtual void Move(float deltaTime) = 0;
+
+        virtual ParticleObject* Spawn(float x, float y) = 0;
 
         bool operator == (ParticleObject* other){
             return this->ID == other->ID;
@@ -221,22 +141,12 @@ namespace ParticleAPI{
     };
 
     class FireParticle : public ParticleObject{
-        FireParticle(float x, float y, float forceX, float forceY, float fadeIn,float fadeOut,float timeToLive, float time, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
-        : ParticleObject(timeToLive, time, shader, texture, height, width)
+        public:
+        FireParticle(float fadeIn,float fadeOut,float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+        : ParticleObject(timeToLive, shader, texture, height, width)
         {
-            SpawnTime = time;
-            TimeToLive = timeToLive;
-
-            this->shader = shader;
-            Texture = texture;
-
-            this->Renderer = new OpenGLAPI::SpriteRenderer(shader);
-
             FadeIn = fadeIn;
             FadeOut = fadeOut;
-
-            Width = width;
-            Height = height;
         }
 
         void Draw (int ResolutionX, int ResolutionY) override{
@@ -250,9 +160,128 @@ namespace ParticleAPI{
             Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, opacity);
         }
 
+        void Move(float deltaTime) override{
+            int time = static_cast<int>(OpenGLAPI::InputManager::getInputManager()->getTime());
+            srand(time);
+            int random = rand()%2;
+            int signal = (rand()%2) - 1;
+            if(signal == 0) signal = 1;
+            MoveableObject::move(random*Width*signal, Height);
+        }
+
+        ParticleObject* Spawn(float x, float y) override{
+            ParticleObject* particle = new FireParticle(FadeIn, FadeOut, TimeToLive, shader, Texture, Height, Width);
+            particle->MoveableObject::move(x,y);
+            return particle;
+        }
+
         private:
 
         float FadeIn, FadeOut;
 
+    };
+
+     //Class that receives a particle and spawns particles of that same type
+    class ParticleSpawner{
+        public:
+        ParticleSpawner(float x, float y, int quantity, float timeToLive, ParticleObject* particle){
+            ID = ParticleManager::getParticleManager()->Insert(this);
+            float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+            TimeToLive = timeToLive;
+            SpawnTime = time;
+            Particle = particle;
+            this->x = x;
+            this->y = y;
+        }
+
+        virtual void Update(float deltaTime){
+            for(it = list.begin(); it != list.end(); ++it){
+                if((*it)->shoudlDie()){
+                    list.erase(it);
+                }
+                (*it)->Move(deltaTime);
+            }
+        }
+
+        virtual void Draw(int ResolutionX,int ResolutionY){
+            for(it = list.begin(); it != list.end(); ++it){
+                (*it)->Draw(ResolutionX, ResolutionY);
+            }
+        }
+
+        void checkTimeToLive(){
+            float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+            if((SpawnTime + TimeToLive) < time) delete(this);
+        }
+
+        virtual void Spawn(){
+            float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+            if(time > LastSpawn + 2) list.push_front(Particle->Spawn(x,y));
+        }
+
+        ~ParticleSpawner(){
+            ParticleManager::getParticleManager()->deleteSpawner(this);
+        }
+
+        bool operator == (ParticleSpawner * other){
+            return this->ID == other->ID;
+        }
+
+        private:
+        int ID;
+        int Width,Height;
+        float Angle, TimeToLive, SpawnTime, LastSpawn, x, y;
+        ParticleObject* Particle;
+        std::list<ParticleObject*> list;
+        std::list<ParticleObject*>::iterator it;
+    };
+
+
+    class ParticleManager{
+        public:
+
+        static ParticleManager * getParticleManager(){
+            static ParticleManager* manager = nullptr;
+            if(!manager) manager = new ParticleManager();
+            return manager;
+        }
+
+        //Function that is called everytime a ParticleSpawner is created 
+        int Insert(ParticleSpawner* spawner){
+            list.insert(list.begin(), spawner);
+            quantity++;
+            return quantity;
+        }
+
+        //Function that is called everytime a ParticleSpawner is deleted
+        void deleteSpawner(ParticleSpawner* spawner){
+            list.remove(spawner);
+            quantity--;
+        }
+
+        //Function that is called every frame in order to update position
+        void Update(float deltaTime){
+            std::list<ParticleSpawner*>::iterator it;
+            for(it = list.begin(); it != list.end(); ++it){
+                (*it)->Update(deltaTime);
+                (*it)->checkTimeToLive();
+            }
+        }
+
+        //Function that is called every frame in order to draw the particles
+        void Draw(int ResolutionX,int ResolutionY){
+            std::list<ParticleSpawner*>::iterator it;
+            for(it = list.begin(); it != list.end(); ++it){
+                (*it)->Draw(ResolutionX,ResolutionY);
+            }
+        }
+
+        private:
+        int quantity;
+        std::list<ParticleSpawner*> list;
+
+        ParticleManager(){
+            quantity = 0;
+        }
     };
 }

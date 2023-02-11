@@ -97,9 +97,11 @@ int main()
     OpenGLAPI::Texture Textura(height, width, GL_REPEAT,GL_REPEAT, GL_LINEAR, GL_LINEAR, data);
 
     OpenGLAPI::Texture Textura2(height, width);
-    
-    ParticleAPI::ParticleObject Particula(10., 2., 50.,inputManager->getTime(), shader, &Textura,20., 20.);
-    ParticleAPI::Particle ParticleSpawner(300., 400.,&Particula, 5, 500.,500., 70);
+
+    ParticleAPI::ParticleManager* particleManager = ParticleAPI::ParticleManager::getParticleManager();
+
+    ParticleAPI::FireParticle Particula(2.0,2.0,20.0,shader, &Textura, 10.0,10.0);
+    ParticleAPI::ParticleSpawner particleSpawner(300., 400.,10,10., &Particula);
     std::cout << "BACK AT MAIN" << std::endl;
     //Particula.spawn(300., 400.,200.,0.);
 
@@ -121,7 +123,7 @@ int main()
         //std::cout << "TIME: " <<inputManager->getTime()<< std::endl;
         
         //Particula.draw(800,600, after-current, current);
-        ParticleSpawner.Update(800,600, after-current, current);
+        //ParticleSpawner.Update(800,600, after-current, current);
 
         current = after;
         after = inputManager->getTime();
