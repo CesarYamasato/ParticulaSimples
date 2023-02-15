@@ -13,7 +13,6 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
@@ -132,7 +131,7 @@ int main()
     //debugManager->DisableDebug();
 
     glEnable(GL_DEBUG_OUTPUT );
-    glDebugMessageCallback(MessageCallback, 0 );
+    glDebugMessageCallback(OpenGLAPI::MessageCallback, 0 );
 
     OpenGLAPI::InputManager * inputManager = nullptr;
     inputManager = OpenGLAPI::InputManager::getInputManager();
