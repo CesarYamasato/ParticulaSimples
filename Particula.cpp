@@ -51,7 +51,6 @@ class WaterParticle: public ParticleAPI::ParticleObject{
     ParticleObject * Spawn(float x, float y)override{
         ParticleObject* returnParticle = new WaterParticle(Gravity, Force, TimeToLive,shader, Texture, Height, Width);
         float random = getRandomForce();
-        std::cout << random << std::endl;
         returnParticle->ParticleAPI::MoveableObject::addForce(Force*random, Gravity);
         returnParticle->ParticleAPI::MoveableObject::move(x,y);
         return returnParticle;
