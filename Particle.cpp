@@ -91,20 +91,19 @@ using namespace ParticleAPI;
     }
 
     ParticleObject::~ParticleObject(){
-        //delete Renderer;
+        delete (Renderer);
     }
 
     bool ParticleObject::shoudlDie(){
         float time = OpenGLAPI::InputManager::getInputManager()->getTime();
         bool shoulddie = (SpawnTime + TimeToLive) < time;
-        if(shoulddie) std::cout << "AE CARALHOOOO" << std::endl;
         return shoulddie;
     }
 
     void ParticleObject::Draw(int ResolutionX, int ResolutionY) {
         float x = getX();
         float y = getY();
-            Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, 1.0);
+        Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, 1.0);
     }
 
     bool ParticleObject::operator == (ParticleObject* other){
@@ -136,12 +135,11 @@ using namespace ParticleAPI;
     }
 
     void FireParticle::Move(float deltaTime){
-        int time = static_cast<int>(OpenGLAPI::InputManager::getInputManager()->getTime());
-            int random = rand()%2;
-            int signal = (rand()%2) - 1;
-            if(signal == 0) signal = 1;
-            MoveableObject::move(random*10*Width*signal*deltaTime, Height*deltaTime*2);
-            LastSpawn = time;
+        //int time = static_cast<int>(OpenGLAPI::InputManager::getInputManager()->getTime());
+        int random = rand()%2;
+        int signal = (rand()%2) - 1;
+        if(signal == 0) signal = 1;
+        MoveableObject::move(random*10*Width*signal*deltaTime, Height*deltaTime*2);
     }
 
     ParticleObject* FireParticle::Spawn(float x, float y){
@@ -156,7 +154,7 @@ using namespace ParticleAPI;
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     //Class that receives a particle and spawns particles of that same type
-    ParticleSpawner::ParticleSpawner(float x, float y, int quantity, float timeToLive, ParticleObject* particle){
+    ParticleSpawner::ParticleSpawner(float x, float y, float quantity, float timeToLive, ParticleObject* particle){
         ID = ParticleManager::getParticleManager()->Insert(this);
         float time = OpenGLAPI::InputManager::getInputManager()->getTime();
         TimeToLive = timeToLive;
@@ -164,6 +162,7 @@ using namespace ParticleAPI;
         Particle = particle;
         this->x = x;
         this->y = y;
+        Quantity = quantity;
     }
 
     void ParticleSpawner::Update(float deltaTime){
@@ -190,8 +189,7 @@ using namespace ParticleAPI;
 
     void ParticleSpawner::Spawn(){
         float time = OpenGLAPI::InputManager::getInputManager()->getTime();
-        if(time > LastSpawn + 0.3) {
-            std::cout << "hello3" << std::endl;
+        if(time > LastSpawn + Quantity) {
             list.push_front(Particle->Spawn(x,y));
             LastSpawn = time;
         }

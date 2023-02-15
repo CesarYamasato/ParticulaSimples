@@ -12,7 +12,6 @@
 #include <cstdlib>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void MessageCallback( GLenum source, GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar* message,const void* userParam );
 
 
 const unsigned int SCR_WIDTH = 800;
@@ -29,6 +28,46 @@ float vertices[] = {
 unsigned int indices[] = {
     0,1,3,
     1,2,3
+};
+
+class WaterParticle: public ParticleAPI::ParticleObject{
+    public:
+    WaterParticle(float gravity, float forceX, float timeToLive, Shader * shader, OpenGLAPI::Texture* texture, int height, int width) 
+    : ParticleObject(timeToLive, shader, texture, height,width){
+        Force = forceX;
+        Gravity = gravity;
+        first = true;
+    }
+
+    void Move (float deltaTime) override{
+        if(!first) this->addVel(deltaTime);
+        else {
+            this->addVel(deltaTime);
+            this->addForce(-Force, 0);
+            first = false;
+        }
+        this->move(deltaTime);
+    }
+
+    ParticleObject * Spawn(float x, float y)override{
+        ParticleObject* returnParticle = new WaterParticle(Gravity, Force, TimeToLive,shader, Texture, Height, Width);
+        float random = getRandomForce();
+        std::cout << random << std::endl;
+        returnParticle->ParticleAPI::MoveableObject::addForce(Force*random, Gravity);
+        returnParticle->ParticleAPI::MoveableObject::move(x,y);
+        return returnParticle;
+    }
+
+    private:
+    float Force, Gravity;
+    bool first;
+
+    float getRandomForce(){
+        //int time  = static_cast<int>(OpenGLAPI::InputManager::getInputManager()->getTime());
+        float random = static_cast<float>(rand()%2);
+        for(int i = 1; i < 3;  i++) random += ((rand()%5)+5)/pow(10,i);
+        return random;
+    }
 };
 
 int main()
@@ -75,7 +114,10 @@ int main()
     std::string path = "/home/cesar/Documentos/OpenGL/Particula/Shaders/";
     std::string vertexPath = path + "ParticuleVertex2.vs";
     std::string fragmentPath = path + "ParticleFragment.fs";
-    shader = new Shader(vertexPath.c_str(), fragmentPath.c_str());        
+    shader = new Shader(vertexPath.c_str(), fragmentPath.c_str());   
+
+    std::string Waterfragment = path + "WaterFragment.fs";
+    Shader * waterShader = new Shader(vertexPath.c_str(), Waterfragment.c_str());     
 
     std::string imagePath = "/home/cesar/Documentos/OpenGL/Particula/orange.png"; 
     int width, height, nrChannels;
@@ -106,8 +148,11 @@ int main()
     ParticleAPI::ParticleManager* particleManager = ParticleAPI::ParticleManager::getParticleManager();
 
     ParticleAPI::FireParticle Particula(5.0,5.0,10.0,shader, &Textura, 10.0,10.0);
-    ParticleAPI::ParticleSpawner* particleSpawner = new ParticleAPI::ParticleSpawner(300., 10.,10,30., &Particula);
-    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(200., 10.,10,30., &Particula);
+    WaterParticle waterParticle(-100.,50., 10.,waterShader, &Textura2, 10.,10.);
+    ParticleAPI::ParticleSpawner * waterSpawner = new ParticleAPI::ParticleSpawner(300., 500., 0.1,30., &waterParticle);
+    ParticleAPI::ParticleSpawner* particleSpawner = new ParticleAPI::ParticleSpawner(300., 10.,0.3,30., &Particula);
+    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(200., 10.,0.3,30., &Particula);
+    //OpenGLAPI::SpriteRenderer * campfire = new OpenGLAPI::SpriteRenderer() 
     std::cout << "BACK AT MAIN" << std::endl;
     //Particula.spawn(300., 400.,200.,0.);
 
@@ -131,7 +176,7 @@ int main()
 
         //std::cout << "MOUSE: " << ((mouse[0]+1)/2) << " " << ((mouse[1]+1)/2) << std::endl;
 
-        if(mouse[2]) new ParticleAPI::ParticleSpawner((1.-((mouse[0]+1)/2))*Resolution[0], ((1.-(mouse[1]+1)/2))*Resolution[1],10,5., &Particula);
+        if(mouse[2]) new ParticleAPI::ParticleSpawner((1.-((mouse[0]+1)/2))*Resolution[0], ((1.-(mouse[1]+1)/2))*Resolution[1],0.3,30., &Particula);
         
         particleManager->Update(after-current);
         particleManager->Draw(Resolution[0],Resolution[1]);
@@ -154,38 +199,3 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
     printf("%i:%i\n", width,height);
 }
-
-void APIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam )
-        {
-        fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n", ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ), type, severity, message );
-        switch (source)
-            {
-                case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
-                case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
-                case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
-                case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
-                case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
-                case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
-            } std::cout << std::endl;
-            switch (type)
-            {
-                case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
-                case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
-                case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break; 
-                case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
-                case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
-                case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
-                case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
-                case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
-                case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
-            } std::cout << std::endl;
-
-            switch (severity)
-            {
-                case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
-                case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
-                case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
-                case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
-            } std::cout << std::endl;
-            std::cout << std::endl;
-        }

@@ -93,14 +93,14 @@ namespace ParticleAPI{
 
         private:
 
-        float FadeIn, FadeOut, LastSpawn;
+        float FadeIn, FadeOut;
 
     };
 
      //Class that receives a particle and spawns particles of that same type
     class ParticleSpawner{
         public:
-        ParticleSpawner(float x, float y, int quantity, float timeToLive, ParticleObject* particle);
+        ParticleSpawner(float x, float y, float quantity, float timeToLive, ParticleObject* particle);
 
         virtual void Update(float deltaTime);
 
@@ -119,7 +119,7 @@ namespace ParticleAPI{
         private:
         int ID;
         int Width,Height;
-        float Angle, TimeToLive, SpawnTime, LastSpawn, x, y;
+        float Angle, TimeToLive, SpawnTime, LastSpawn, x, y, Quantity;
         ParticleObject* Particle;
         std::list<ParticleObject*> list;
         std::list<ParticleObject*>::iterator it;
