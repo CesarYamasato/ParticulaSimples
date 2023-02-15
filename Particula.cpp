@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include "stb_image/stb_image.h"
-#include "Particle.hpp"
+#include "includes/Particle.hpp"
 
 #include <fstream>
 #include <iostream>
