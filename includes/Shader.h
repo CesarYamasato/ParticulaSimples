@@ -2,16 +2,11 @@
 #define SHADER_H
 
 #include <glad/glad.h>
-#include <glm/glm.hpp>
 
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <filesystem>
-#include <boost/regex.hpp>
-
-const boost::regex includeE("^\\s*(?:#include){1}\\s+(?:[<'\"](.*)[>'\"]){1}.*$");
 
 class Shader
 {
@@ -19,42 +14,42 @@ public:
     unsigned int ID;
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
+    Shader(const char* vertexPath, const char* fragmentPath)
     {
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;
         std::string fragmentCode;
-        std::string geometryCode;
         std::ifstream vShaderFile;
         std::ifstream fShaderFile;
-        std::ifstream gShaderFile;
+
         // ensure ifstream objects can throw exceptions:
-        vShaderFile.exceptions (std::ifstream::badbit);
-        fShaderFile.exceptions (std::ifstream::badbit);
-        gShaderFile.exceptions (std::ifstream::badbit);
-        
+        vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+        fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    
         try 
         {
+            // open files
+            vShaderFile.open(vertexPath);
+            fShaderFile.open(fragmentPath);
             std::stringstream vShaderStream, fShaderStream;
 
-            vertexCode = generateIncludes(vertexPath);
-            fragmentCode = generateIncludes(fragmentPath);
-	
-            // if geometry shader path is present, also load a geometry shader
-            if(geometryPath != nullptr)
-            {
-                gShaderFile.open(geometryPath);
-                std::stringstream gShaderStream;
-                gShaderStream << gShaderFile.rdbuf();
-                gShaderFile.close();
-                geometryCode = gShaderStream.str();
-            }
+            // read file's buffer contents into streams
+            vShaderStream << vShaderFile.rdbuf();
+            fShaderStream << fShaderFile.rdbuf();
+            
+            // close file handlers
+            vShaderFile.close();
+            fShaderFile.close();
+          
+            // convert stream into string
+            vertexCode   = vShaderStream.str();
+            fragmentCode = fShaderStream.str();
+
         }
         catch (std::ifstream::failure& e)
         {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << e.what() << std::endl;
         }
-
         const char* vShaderCode = vertexCode.c_str();
         const char * fShaderCode = fragmentCode.c_str();
 
@@ -70,30 +65,15 @@ public:
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
-        // if geometry shader is given, compile geometry shader
-        unsigned int geometry;
-        if(geometryPath != nullptr)
-        {
-            const char * gShaderCode = geometryCode.c_str();
-            geometry = glCreateShader(GL_GEOMETRY_SHADER);
-            glShaderSource(geometry, 1, &gShaderCode, NULL);
-            glCompileShader(geometry);
-            checkCompileErrors(geometry, "GEOMETRY");
-        }
         // shader Program
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
-        if(geometryPath != nullptr)
-            glAttachShader(ID, geometry);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
-        // delete the shaders as they're linked into our program now and no longer necessery
+        // delete the shaders as they're linked into our program now and no longer necessary
         glDeleteShader(vertex);
         glDeleteShader(fragment);
-        if(geometryPath != nullptr)
-            glDeleteShader(geometry);
-
     }
     // activate the shader
     // ------------------------------------------------------------------------
@@ -117,79 +97,42 @@ public:
     { 
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value); 
     }
-    // ------------------------------------------------------------------------
-    void setVec2(const std::string &name, const glm::vec2 &value) const
-    { 
-        glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]); 
-    }
-    void setVec2(const std::string &name, float x, float y) const
-    { 
-        glUniform2f(glGetUniformLocation(ID, name.c_str()), x, y); 
-    }
-    // ------------------------------------------------------------------------
-    void setVec3(const std::string &name, const glm::vec3 &value) const
-    { 
-        glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]); 
-    }
-    void setVec3(const std::string &name, float x, float y, float z) const
-    { 
-        glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z); 
-    }
-    // ------------------------------------------------------------------------
-    void setVec4(const std::string &name, const glm::vec4 &value) const
-    { 
-        glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]); 
-    }
-    void setVec4(const std::string &name, float x, float y, float z, float w) 
-    { 
-        glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w); 
-    }
-    // ------------------------------------------------------------------------
-    void setMat2(const std::string &name, const glm::mat2 &mat) const
+    void setSampler(const std::string &name) const
     {
-        glUniformMatrix2fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+         glUniform1i(glGetUniformLocation(ID, name.c_str()), 0);
     }
-    // ------------------------------------------------------------------------
-    void setMat3(const std::string &name, const glm::mat3 &mat) const
+    void setVec2(const std::string &name, double value[]) const
     {
-        glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+         glUniform2f(glGetUniformLocation(ID, name.c_str()), value[0], value[1]);
     }
-    // ------------------------------------------------------------------------
+    void setVec3(const std::string &name, double value[]) const
+    {
+         glUniform3f(glGetUniformLocation(ID, name.c_str()), value[0], value[1], value[2]);
+    }
+     void setVec4(const std::string &name, double value[]) const
+    {
+         glUniform4f(glGetUniformLocation(ID, name.c_str()), value[0], value[1], value[2], value[3]);
+    }
     void setMat4(const std::string &name, const glm::mat4 &mat) const
     {
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
     }
-    // ------------------------------------------------------------------------
-    void setVec4(const std::string &name, double value[]) const
-    {
-         glUniform4f(glGetUniformLocation(ID, name.c_str()), value[0], value[1], value[2], value[3]);
-    }
-    // ------------------------------------------------------------------------
     void setSampler(const std::string &name, GLenum index) const
     {
          glUniform1i(glGetUniformLocation(ID, name.c_str()),index);
     }
-    // ------------------------------------------------------------------------
-    void setDefaultParams(void* array) const
-    {
-        double* mouse = getMouseValues(array);
-        float time = getTimeValue(array);
-        glm::vec2 resolution = getResolutionValue(array);
-        setVec4("Mouse", mouse);
-        setFloat("Time", time);
-        setVec2("Resolution", resolution);
-    }
+
 private:
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------
-    void checkCompileErrors(GLuint shader, std::string type)
+    void checkCompileErrors(unsigned int shader, std::string type)
     {
-        GLint success;
-        GLchar infoLog[1024];
-        if(type != "PROGRAM")
+        int success;
+        char infoLog[1024];
+        if (type != "PROGRAM")
         {
             glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-            if(!success)
+            if (!success)
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
                 std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
@@ -198,83 +141,13 @@ private:
         else
         {
             glGetProgramiv(shader, GL_LINK_STATUS, &success);
-            if(!success)
+            if (!success)
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
                 std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
             }
         }
     }
-
-    std::string generateIncludes(const char* path){
-        std::stringstream output;
-        std::ifstream shaderFile;
-        shaderFile.open(path);
-        std::string line;
-
-        while (std::getline(shaderFile, line)){
-            boost::cmatch what;
-            const char * lineC = line.c_str();
-            if(regex_match(lineC,what, includeE)){
-                std::ifstream includeFile;
-                includeFile.exceptions (std::ifstream::badbit | std::ifstream::failbit);
-                std::filesystem::path newPath = path;
-                newPath = newPath.parent_path();
-                std::string tempPath = newPath.u8string();
-                try{
-                    std::filesystem::path newPath = path;
-                    newPath = newPath.parent_path();
-                    std::string tempPath = newPath.u8string() + "/";
-                    tempPath = tempPath  + what[1].str();
-                    const char* finalPath = tempPath.c_str();
-
-                    includeFile.open(finalPath, std::ifstream::in);
-
-                    output << generateIncludes(finalPath);
-                }
-                catch (std::ifstream::failure& e)
-                {
-                    std::cout << "ERROR::SHADER::INCLUDE_FILE_NOT_SUCCESFULLY_READ" << std::endl;
-                }
-            }
-            else output << line + "\n"; 
-        }
-        return output.str();
-    }
-
-    //Returns a double array from the array of an input manager
-    // ------------------------------------------------------------------------
-    double * getMouseValues(void* array) const
-    {
-        double * mouse = (double*) malloc(sizeof(double)*4);
-        for(int i = 0; i < 4; i ++) mouse[i] = *(double*) (array + sizeof(bool)*2 + sizeof(double)*i);
-        return mouse;
-    }
-
-    //Returns a bool array from the array of an input manager
-    // ------------------------------------------------------------------------
-    bool * getBoolValues(void* array) const
-    {
-        bool* bools = (bool*) malloc(sizeof(bool)*2);
-        for(int i = 0; i < 2; i ++) bools[i] = *(bool*) array + sizeof(bool)*i;
-        return bools;
-    }
-
-    //Returns the time value from the array of an input manager
-    // ------------------------------------------------------------------------
-    float getTimeValue(void* array) const
-    {
-        return *(float*) (array + sizeof(double)*6+sizeof(bool)*2);
-    }
-
-    //Returns the resolution from the arry of an input manager
-    // ------------------------------------------------------------------------
-    glm::vec2 getResolutionValue(void* array) const
-    {   
-        float height = *(double*) (array + sizeof(double)*4+sizeof(bool)*2);
-        float width =  *(double*) (array + sizeof(double)*5+sizeof(bool)*2);
-        glm::vec2 vec(height,width);
-        return vec;
-    }
 };
 #endif
+

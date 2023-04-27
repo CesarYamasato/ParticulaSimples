@@ -1,10 +1,3 @@
-#include <iostream>
-#include <string>
-#include <glm/glm.hpp>
-#include <cstdlib>
-#include <list>
-#include "Shader.h"
-#include "OpenGLAPI.hpp"
 #include "Particle.hpp"
 
 
@@ -32,9 +25,14 @@ using namespace ParticleAPI;
         this->y += y;
     }
 
+    Transform::~Transform(){
+        
+    }
+
     //////////////////////////////////////////////////////////////////////////////////////////////
     //MOVEABLE OBJECT                                                                           //
     //////////////////////////////////////////////////////////////////////////////////////////////
+    int MoveableObject::count = 0;
 
     MoveableObject::MoveableObject(float X, float Y,float velX, float velY, float accX,float accY, float mass){
         transform = new ParticleAPI::Transform(X,Y);
@@ -43,6 +41,7 @@ using namespace ParticleAPI;
         AccX = accX;
         AccY = accY;
         Mass = mass;
+        //std::cout << "TESTE" << std::endl;
     }
 
     void MoveableObject::move(float time){
@@ -71,12 +70,20 @@ using namespace ParticleAPI;
         return transform->getY();
     }
 
+    MoveableObject::~MoveableObject(){
+        delete(transform);
+        count ++;
+    }
+
     //////////////////////////////////////////////////////////////////////////////////////////////
     //BASE PARTICLE                                                                             //
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     //Particle object class
-    ParticleObject::ParticleObject(float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+    int ParticleObject::Pcount = 0;
+    int ParticleObject::PDcount = 0;
+    ParticleObject::ParticleObject(float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width):
+    MoveableObject()
     {
         float time = OpenGLAPI::InputManager::getInputManager()->getTime();
         SpawnTime = time;
@@ -93,6 +100,7 @@ using namespace ParticleAPI;
 
     ParticleObject::~ParticleObject(){
         delete (Renderer);
+        PDcount++;
     }
 
     bool ParticleObject::shoudlDie(){
@@ -144,6 +152,7 @@ using namespace ParticleAPI;
     }
 
     ParticleObject* FireParticle::Spawn(float x, float y){
+        ParticleObject::Pcount++;
         ParticleObject* particle = new FireParticle(FadeIn, FadeOut, TimeToLive, shader, Texture, Height, Width);
         particle->MoveableObject::move(x,y);
         return particle;
@@ -153,7 +162,7 @@ using namespace ParticleAPI;
     //////////////////////////////////////////////////////////////////////////////////////////////
     //PARTICLE SPAWNER                                                                          //
     //////////////////////////////////////////////////////////////////////////////////////////////
-
+    int ParticleSpawner::Dcount = 0;
     //Class that receives a particle and spawns particles of that same type
     ParticleSpawner::ParticleSpawner(float x, float y, float quantity, float timeToLive, ParticleObject* particle){
         ID = ParticleManager::getParticleManager()->Insert(this);
@@ -164,6 +173,7 @@ using namespace ParticleAPI;
         this->x = x;
         this->y = y;
         Quantity = quantity;
+        Dcount++;
     }
 
     void ParticleSpawner::Update(float deltaTime){
@@ -171,6 +181,7 @@ using namespace ParticleAPI;
             if((*it)->shoudlDie()){
                 delete(*it);
                 list.erase(it++);
+                //Dcount++;
                 continue;
             }
             (*it)->Move(deltaTime);
@@ -200,10 +211,14 @@ using namespace ParticleAPI;
         std::cout << "ID: " << ID << std::endl;
     }
 
-    //ParticleSpawner::~ParticleSpawner(){
-      //  std::cout << "DELETADO IRMÃO" << std::endl;
-        //ParticleManager::getParticleManager()->deleteSpawner(this);
-    //}
+    ParticleSpawner::~ParticleSpawner(){
+        while(!list.empty()) {
+            delete list.front();
+            list.pop_front();
+            std::cout << "DELETADO PRA KARALHO" << std::endl;
+         }
+        list.clear();
+    }
 
     bool ParticleSpawner::operator == (ParticleSpawner * other){
         bool returnVal = (this->ID == other->ID);
@@ -214,11 +229,12 @@ using namespace ParticleAPI;
     //////////////////////////////////////////////////////////////////////////////////////////////
     //PARTICLE MANAGER                                                                          //
     //////////////////////////////////////////////////////////////////////////////////////////////
+     ParticleManager * ParticleManager::manager = nullptr;
+     int ParticleManager::SpawnerCount = 0;
 
-    ParticleManager * ParticleManager::getParticleManager(){
-        static ParticleManager* manager = nullptr;
-        if(!manager) manager = new ParticleManager();
-        return manager;
+    ParticleManager * ParticleManager::getParticleManager(){;
+        if(!ParticleManager::manager) ParticleManager::manager = new ParticleManager();
+        return ParticleManager::manager;
     }
 
     //Function that is called everytime a ParticleSpawner is created 
@@ -233,6 +249,7 @@ using namespace ParticleAPI;
         std::cout << "REMOVIDO IRMÃO" << std::endl;
         delete(*spawner);
         list.erase(spawner++);
+        SpawnerCount++;
         quantity--;
     }
 
@@ -261,5 +278,6 @@ using namespace ParticleAPI;
     }
 
    ParticleManager::ParticleManager(){
+        manager = nullptr;
         quantity = 0;
     }
