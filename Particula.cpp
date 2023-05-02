@@ -210,9 +210,9 @@ int main(int argc, char **argv)
     }
     std::cout
     << " PCOUNT " << OpenGLAPI::SpriteRenderer::NumRenderer
-    << " PDCOUNT " <<OpenGLAPI::SpriteRenderer::DelRenderer
-    << " CCOUNT " << ParticleAPI::ParticleSpawner::Dcount
-    << " CCOUNT " << ParticleAPI::ParticleManager::SpawnerCount;
+    << " PDCOUNT " <<ParticleAPI::ParticleObject::Pcount
+    << " CCOUNT " << ParticleAPI::Transform::numDeletes
+    << " CCOUNT " << ParticleAPI::Transform::numCreates;
     free(data);
     OpenGLAPI::Terminate();
     return 0;

@@ -6,10 +6,12 @@ using namespace ParticleAPI;
     //////////////////////////////////////////////////////////////////////////////////////////////
     //TRANSFORM                                                                                 //
     //////////////////////////////////////////////////////////////////////////////////////////////
-
+     int Transform::numDeletes = 0;
+     int Transform::numCreates = 0;
     Transform::Transform(float x, float y){
         this->x = x;
         this->y = y;
+        numCreates++;
     }
 
     float Transform::getX(){
@@ -26,7 +28,7 @@ using namespace ParticleAPI;
     }
 
     Transform::~Transform(){
-        
+        numDeletes++;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////

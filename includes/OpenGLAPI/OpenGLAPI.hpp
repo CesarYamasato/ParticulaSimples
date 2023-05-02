@@ -114,9 +114,7 @@ namespace OpenGLAPI{
         unsigned int getHeight();
 
         unsigned int getWidth();
-
-        virtual ~Texture();
-
+        
         private:
         unsigned int textureID;
         unsigned int Height;

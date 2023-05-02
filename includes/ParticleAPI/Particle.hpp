@@ -30,6 +30,8 @@ namespace ParticleAPI{
 
         ~Transform();
 
+        static int numDeletes, numCreates;
+
         private:
         float x,y;
     };
