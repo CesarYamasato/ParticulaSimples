@@ -107,9 +107,11 @@ int main(int argc, char **argv)
 #endif
 
     if(!OpenGLAPI::libInit(SCR_WIDTH,SCR_HEIGHT, "teste", framebuffer_size_callback)) return -1;
-    std::cout << "HELLO";
     
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
     Shader * shader;
     std::string *shaderPath = new std::string(OpenGLAPI::GetPathTo("/Shaders/"));
@@ -126,18 +128,7 @@ int main(int argc, char **argv)
     int width, height, nrChannels;
     unsigned char *data = stbi_load(imagePath.c_str(), &width, &height, &nrChannels, 0);                       
 
-    //Habilita mensagens de debug
-
-    //OpenGLAPI::DebugManager* debugManager = nullptr;
-    //debugManager = OpenGLAPI::DebugManager::getDebugManager();
-    //debugManager->DisableDebug();
-
-    //glEnable(GL_DEBUG_OUTPUT );
-    //glDebugMessageCallback(OpenGLAPI::MessageCallback, 0 );
-
-
-    OpenGLAPI::InputManager * inputManager = nullptr;
-    inputManager = OpenGLAPI::InputManager::getInputManager();
+    OpenGLAPI::InputManager * inputManager = OpenGLAPI::InputManager::getInputManager();
     inputManager->setWindow(OpenGLAPI::window);
     inputManager->setKeyCallBackFunction();
 
@@ -145,20 +136,12 @@ int main(int argc, char **argv)
 
     OpenGLAPI::Texture Textura(height, width, GL_REPEAT,GL_REPEAT, GL_LINEAR, GL_LINEAR, data);
 
-    //OpenGLAPI::Texture Textura2(height, width);
-
     ParticleAPI::ParticleManager* particleManager = ParticleAPI::ParticleManager::getParticleManager();
 
     ParticleAPI::FireParticle Particula(5.0,5.0,10.0,shader, &Textura, 10.0,10.0);
-    //WaterParticle waterParticle(-100.,50., 10.,waterShader, &Textura2, 10.,10.);
-    //ParticleAPI::ParticleSpawner * waterSpawner = new ParticleAPI::ParticleSpawner(300., 500., 0.1,30., &waterParticle);
-    //ParticleAPI::ParticleSpawner* particleSpawner = new ParticleAPI::ParticleSpawner(300., 5.,0.3,30., &Particula);
-    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(200., 5.,0.3,10., &Particula);
-    //OpenGLAPI::SpriteRenderer * campfire = new OpenGLAPI::SpriteRenderer() 
-    //Particula.spawn(300., 400.,200.,0.);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(200., 5.,0.3,10., &Particula);
+
     double * Resolution = (double*) malloc(sizeof(int)*2);
 
     int frame = 0;
@@ -184,9 +167,6 @@ int main(int argc, char **argv)
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        //std::cout << "TIME: " <<inputManager->getTime()<< std::endl;
-
-        //std::cout << "MOUSE: " << ((mouse[0]+1)/2) << " " << ((mouse[1]+1)/2) << std::endl;
 
         if(mouse[2]) new ParticleAPI::ParticleSpawner((1.-((mouse[0]+1)/2))*Resolution[0], ((1.-(mouse[1]+1)/2))*Resolution[1],0.3,10., &Particula);
         

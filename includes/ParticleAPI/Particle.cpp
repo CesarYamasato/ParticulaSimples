@@ -43,7 +43,6 @@ using namespace ParticleAPI;
         AccX = accX;
         AccY = accY;
         Mass = mass;
-        //std::cout << "TESTE" << std::endl;
     }
 
     void MoveableObject::move(float time){
@@ -217,14 +216,12 @@ using namespace ParticleAPI;
         while(!list.empty()) {
             delete list.front();
             list.pop_front();
-            std::cout << "DELETADO PRA KARALHO" << std::endl;
          }
         list.clear();
     }
 
     bool ParticleSpawner::operator == (ParticleSpawner * other){
         bool returnVal = (this->ID == other->ID);
-        std::cout << "CONFERIDO IRMÃO" << std::endl;
         return returnVal;
     }
 
@@ -248,7 +245,6 @@ using namespace ParticleAPI;
 
     //Function that is called everytime a ParticleSpawner is deleted
     void ParticleManager::deleteSpawner(std::list<ParticleSpawner*>::iterator& spawner){
-        std::cout << "REMOVIDO IRMÃO" << std::endl;
         delete(*spawner);
         list.erase(spawner++);
         SpawnerCount++;
