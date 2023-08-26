@@ -16,6 +16,7 @@ CTestTestfile.cmake
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 valgrind*
+*.bat
 
 # Local History for Visual Studio Code
 .history/
