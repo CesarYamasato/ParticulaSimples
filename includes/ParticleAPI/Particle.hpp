@@ -39,8 +39,9 @@ namespace ParticleAPI{
     ////////////////////////////////////////////////////////////////////////
     class MoveableObject{
         public:
+        Transform * transform;
 
-        MoveableObject(float X = 0., float Y = 0.,float velX = 0, float velY = 0, float accX = 0,float accY = 0, float mass = 1);
+        MoveableObject(float X, float Y,float velX = 0, float velY = 0, float accX = 0,float accY = 0, float mass = 1);
 
         void move(float time);
 
@@ -50,10 +51,6 @@ namespace ParticleAPI{
 
         void addForce(float forceX,float forceY);
 
-        float getX();
-
-        float getY();
-
         virtual ~MoveableObject();
 
         static int count;
@@ -62,13 +59,12 @@ namespace ParticleAPI{
         float VelX, VelY;
         float AccX, AccY;
         float Mass;
-        Transform * transform;
     };
 
     //Particle object class
     class ParticleObject : protected MoveableObject{
         public:
-        ParticleObject(float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width);
+        ParticleObject(float x, float y, float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width);
 
         ~ParticleObject();
 
@@ -95,7 +91,7 @@ namespace ParticleAPI{
 
     class FireParticle : public ParticleObject{
         public:
-        FireParticle(float fadeIn,float fadeOut,float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width);
+        FireParticle(float x, float y, float fadeIn,float fadeOut,float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width);
 
         void Draw (int ResolutionX, int ResolutionY) override;
 
@@ -133,7 +129,8 @@ namespace ParticleAPI{
         private:
         int ID;
         int Width,Height;
-        float Angle, TimeToLive, SpawnTime, LastSpawn, x, y, Quantity;
+        float Angle, TimeToLive, SpawnTime, LastSpawn, Quantity;
+        Transform * pos;
         ParticleObject* Particle;
         std::list<ParticleObject*> list;
         std::list<ParticleObject*>::iterator it;

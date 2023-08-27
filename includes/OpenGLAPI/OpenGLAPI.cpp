@@ -3,6 +3,8 @@
 
 using namespace OpenGLAPI;
 
+    GLFWwindow * OpenGLAPI::window;
+
     int OpenGLAPI::libInit(int SCR_WIDTH, int SCR_HEIGHT, const char* name, void framebuffer_size_callback(GLFWwindow* window, int width, int height)){
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -35,7 +37,7 @@ using namespace OpenGLAPI;
         return glfwWindowShouldClose(window);
     }
 
-    void OpenGLAPI::setwindowTitle(GLFWwindow * window, const char* title){
+    void OpenGLAPI::setwindowTitle(const char* title){
         glfwSetWindowTitle(window,title);
     }
 
@@ -44,10 +46,14 @@ using namespace OpenGLAPI;
     }
 
     void OpenGLAPI::setDefaultParams(Shader shader){
-            InputManager * manager = InputManager::getInputManager();
+            int width,height;
+            double * resolution = (double *) malloc(sizeof(double)*2);
+            glfwGetFramebufferSize(OpenGLAPI::window,&width,&height);
+            Manager::InputManager * manager = Manager::InputManager::getInputManager();
             shader.setVec4("Mouse", manager->getMouse());
-            shader.setFloat("Time", manager->getTime());
-            shader.setVec2("Resolution", manager->getResolution());
+            shader.setFloat("Time", glfwGetTime());
+            shader.setVec2("Resolution", resolution);
+            delete(resolution);
     }
 
     //Função responsável por encontrar o path para um determinado diretório a partir do diretório pai
@@ -94,115 +100,6 @@ using namespace OpenGLAPI;
         } std::cout << std::endl;
         std::cout << std::endl;
     }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //InputManager                                                                              //
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //Classe responsável por manejar input/informações externas ao programa
-        InputManager* InputManager::manager = nullptr;
-        InputManager * InputManager::getInputManager()
-        {
-         if (!InputManager::manager) InputManager::manager = new InputManager;
-         return InputManager::manager;
-        }
-
-        void InputManager::setWindow (GLFWwindow *window){
-            Window = window;
-        }
-
-        void InputManager::setKeyCallBackFunction(){
-            glfwSetKeyCallback(Window, (void (*)(GLFWwindow*, int , int, int, int))keyCallback);
-        }
-
-        void InputManager::setKey(void (*keyFunc)(int), int scanCode){
-            keyArray[scanCode] = keyFunc;
-        }
-
-        void InputManager::processInput(){
-            time = (float) glfwGetTime();
-            if (glfwGetKey(Window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(Window, true);
-            getMouseValue();
-            getKeysPressed(Window);
-            //getInputArray();
-            //printArray();
-        }
-
-        double * InputManager::getResolution(){
-            int height, width;
-            glfwGetFramebufferSize(Window, &width, &height);
-            resolution[0] = width;
-            resolution[1] = height;
-            return resolution;
-        }
-
-        float InputManager::getTime(){
-            time = glfwGetTime();
-            return time;
-        }
-
-        double * InputManager::getMouse(){
-            getMouseValue();
-            return mouse;
-        }
-
-        InputManager:: InputManager()
-        {
-            mouse = (double*) malloc(sizeof(double)*4);
-            shouldDraw = true;
-            press = false;
-            float time = (float) glfwGetTime();
-            resolution = (double *) malloc (sizeof(int)*2);
-
-            //
-            Window = (GLFWwindow*) malloc(sizeof(GLFWwindow*));
-
-            //Setting up for key callback functions
-            keyArray = (void(**)(int)) malloc(sizeof(void(**)(int))*348);
-            for(int i = 0; i < 348; i ++) keyArray[i] = (void(*)(int)) malloc(sizeof(void(*)(int)));
-            for(int i = 0; i < 348; i ++) keyArray[i] = NULL;
-            keyCallback = &OpenGLAPI::InputManager::keyCallbackFunction;
-        }
-
-        void InputManager::getMouseValue(){
-            glfwGetCursorPos(Window,&mouse[0], &mouse[1]);
-            mouse[2] = 0.0;
-            mouse[3] = 0.0;
-            if (glfwGetMouseButton(Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) mouse[2] = 1.0; 
-            if (glfwGetMouseButton(Window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) mouse[3] = 1.0;
-
-            //Normalizando as coordenadas do cursorint height, width;
-            int width, height;
-            glfwGetFramebufferSize(Window, &width, &height);
-            resolution[0] = width;
-            resolution[1] = height;
-            mouse[0] = ((mouse[0]*2.0)/resolution[0]) -1.0;
-            mouse[1] = ((mouse[1]*2.0)/resolution[1]) -1.0;
-        }
-
-        void InputManager::getKeysPressed(GLFWwindow *window){ 
-            if(glfwGetKey(window, 32) == GLFW_PRESS && !press) {
-                shouldDraw = !shouldDraw;
-                press = true;
-            }
-            if(glfwGetKey(window, 32) == GLFW_RELEASE) press = false;
-        }
-
-        /*void InputManager::getInputArray(){
-            static void * array = nullptr;
-            if(!array)array = malloc(sizeof(double*)*6 + sizeof(bool)*2 + sizeof(float));
-            *(bool*) array = shouldDraw;
-            *(bool*) (array + sizeof(bool)) = press;
-            for(int i = 0; i < 4; i++) *(double *) (array + sizeof(double)*i + 2*sizeof(bool)) = mouse[i];
-            *(double *) (array + sizeof(double)*4 + 2*sizeof(bool)) = (double) height;
-            *(double *) (array + sizeof(double)*5 + 2*sizeof(bool)) = (double) width;
-            *(float*) (array + sizeof(double)*6 + sizeof(bool)*2) = time;  
-            this->array = (void*) array;
-        }*/
-
-        void InputManager::keyCallbackFunction(GLFWwindow* window, int key, int scancode, int action, int mods){
-            if(OpenGLAPI::InputManager::getInputManager()->keyArray[key] != NULL)OpenGLAPI::InputManager::getInputManager()->keyArray[key](scancode);
-        }
-
 
     ////////////////////////////////////////////////////////////////////////////////////////////// 
     //DebugManager                                                                              //

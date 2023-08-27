@@ -8,11 +8,11 @@
 #include <iostream>
 #include <filesystem>
 #include "../Shader.h"
+#include "InputManager.hpp"
+#include "common.hpp"
 
 
 namespace OpenGLAPI{
-
-    GLFWwindow * window;
 
     int WindowShouldClose(GLFWwindow * window);
 
@@ -22,64 +22,18 @@ namespace OpenGLAPI{
 
     void render(GLFWwindow * window);
 
-    void setwindowTitle(GLFWwindow * window,const char* title);
+    void setwindowTitle(const char* title);
 
     void Terminate();
 
     void setDefaultParams(Shader shader);
 
+    void setKeyCallBackFunction(void * keyCallback(GLFWwindow*, int , int, int, int));
+    
     //Função responsável por encontrar o path para um determinado diretório a partir do diretório pai
     const char* GetPathTo(std::string directory);
 
     void MessageCallback( GLenum source, GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar* message,const void* userParam );
-
-    //Classe responsável por manejar input/informações externas ao programa
-    class InputManager{
-        public:
-        static InputManager * getInputManager();
-
-        void setWindow (GLFWwindow *window);
-
-        void setKeyCallBackFunction();
-
-        void setKey(void (*keyFunc)(int), int scanCode);
-
-        void processInput();
-
-        void * getInput();
-
-        double * getResolution();
-
-        float getTime();
-
-        double * getMouse();
-
-        void (**keyArray)(int);
-
-        private:
-        static InputManager * manager;
-        double* mouse;
-        bool shouldDraw;
-        bool press;
-        float time;
-        double* resolution;
-        GLFWwindow *Window;
-        void (OpenGLAPI::InputManager::*keyCallback)(GLFWwindow*, int , int, int, int);
-
-
-        void* array;
-
-        InputManager();
-
-        void getMouseValue();
-
-        void getKeysPressed(GLFWwindow *window);
-
-        void getInputArray();
-
-        void keyCallbackFunction(GLFWwindow* window, int key, int scancode, int action, int mods);
-    };
-
 
     //Classe responsável por ativar e desativar mensagens de debug
 

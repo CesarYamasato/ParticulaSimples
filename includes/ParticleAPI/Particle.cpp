@@ -36,7 +36,7 @@ using namespace ParticleAPI;
     //////////////////////////////////////////////////////////////////////////////////////////////
     int MoveableObject::count = 0;
 
-    MoveableObject::MoveableObject(float X, float Y,float velX, float velY, float accX,float accY, float mass){
+    MoveableObject::MoveableObject(float X, float Y,float velX, float velY , float accX ,float accY , float mass){
         transform = new ParticleAPI::Transform(X,Y);
         VelX = velX;
         VelY = velY;
@@ -63,14 +63,6 @@ using namespace ParticleAPI;
         AccY += forceY/Mass;
     }
 
-    float MoveableObject::getX(){
-        return transform->getX();
-    }
-
-    float MoveableObject::getY(){
-        return transform->getY();
-    }
-
     MoveableObject::~MoveableObject(){
         delete(transform);
         count ++;
@@ -83,10 +75,10 @@ using namespace ParticleAPI;
     //Particle object class
     int ParticleObject::Pcount = 0;
     int ParticleObject::PDcount = 0;
-    ParticleObject::ParticleObject(float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width):
-    MoveableObject()
+    ParticleObject::ParticleObject(float x, float y, float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width):
+    MoveableObject(x,y)
     {
-        float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+        float time = glfwGetTime();
         SpawnTime = time;
         TimeToLive = timeToLive;
 
@@ -105,14 +97,14 @@ using namespace ParticleAPI;
     }
 
     bool ParticleObject::shoudlDie(){
-        float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+        float time = glfwGetTime();
         bool shoulddie = (SpawnTime + TimeToLive) < time;
         return shoulddie;
     }
 
     void ParticleObject::Draw(int ResolutionX, int ResolutionY) {
-        float x = getX();
-        float y = getY();
+        float x = transform->getX();
+        float y = transform->getY();
         Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, 1.0);
     }
 
@@ -126,18 +118,18 @@ using namespace ParticleAPI;
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    FireParticle::FireParticle(float fadeIn,float fadeOut,float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
-    : ParticleObject(timeToLive, shader, texture, height, width)
+    FireParticle::FireParticle(float x, float y,float fadeIn,float fadeOut,float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+    : ParticleObject(x, y, timeToLive, shader, texture, height, width)
     {
         FadeIn = fadeIn;
         FadeOut = fadeOut;
     }
 
     void FireParticle::Draw (int ResolutionX, int ResolutionY){
-        float x = getX();
-        float y = getY();
+        float x = transform->getX();
+        float y = transform->getY();
         float opacity = 1.0;
-        float currentTime = OpenGLAPI::InputManager::getInputManager()->getTime();
+        float currentTime = glfwGetTime();
         if(currentTime <= FadeIn+SpawnTime) opacity = 1.0-((FadeIn + SpawnTime -currentTime)/FadeIn);
         else if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((currentTime - (SpawnTime + TimeToLive - FadeOut))/FadeOut);
 
@@ -154,7 +146,7 @@ using namespace ParticleAPI;
 
     ParticleObject* FireParticle::Spawn(float x, float y){
         ParticleObject::Pcount++;
-        ParticleObject* particle = new FireParticle(FadeIn, FadeOut, TimeToLive, shader, Texture, Height, Width);
+        ParticleObject* particle = new FireParticle(x, y, FadeIn, FadeOut, TimeToLive, shader, Texture, Height, Width);
         particle->MoveableObject::move(x,y);
         return particle;
     }
@@ -167,12 +159,11 @@ using namespace ParticleAPI;
     //Class that receives a particle and spawns particles of that same type
     ParticleSpawner::ParticleSpawner(float x, float y, float quantity, float timeToLive, ParticleObject* particle){
         ID = ParticleManager::getParticleManager()->Insert(this);
-        float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+        float time = glfwGetTime();
         TimeToLive = timeToLive;
         SpawnTime = time;
         Particle = particle;
-        this->x = x;
-        this->y = y;
+        pos = new Transform(x,y);
         Quantity = quantity;
         Dcount++;
     }
@@ -196,14 +187,14 @@ using namespace ParticleAPI;
     }
 
     bool ParticleSpawner::checkTimeToLive(){
-        float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+        float time = glfwGetTime();
         return ((SpawnTime + TimeToLive) < time);
     }
 
     void ParticleSpawner::Spawn(){
-        float time = OpenGLAPI::InputManager::getInputManager()->getTime();
+        float time = glfwGetTime();
         if(time > LastSpawn + Quantity) {
-            list.push_front(Particle->Spawn(x,y));
+            list.push_front(Particle->Spawn(pos->getX(),pos->getY()));
             LastSpawn = time;
         }
     }
