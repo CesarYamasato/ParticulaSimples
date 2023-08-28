@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include "stb_image/stb_image.h"
-#include "includes/ParticleAPI/Particle.hpp"
+#include "includes/SimpleParticle/Particle.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -34,10 +34,18 @@ unsigned int indices[] = {
     1,2,3
 };
 
+class FireworkParticle: public ParticleAPI::ParticleObject{
+
+};
+
 // class FireworkParticleSpawner: public ParticleAPI::ParticleSpawner{
-//     FireworkParticleSpawner(float x, float y): ParticleSpawner(x,y,0,,){
+//     public:
+//     FireworkParticleSpawner(float x, float y, FireworkParticle* particle): ParticleSpawner(x,y,0,100,particle){
 
 //     }
+//     private:
+//     SpriteRenderer renderer;
+//     ParticleAPI::ParticleSpawner fireSpawner;
 // };
 
 // class WaterParticle: public ParticleAPI::ParticleObject{
@@ -117,7 +125,7 @@ int main(int argc, char **argv)
 
     ParticleAPI::FireParticle Particula(10,10,5.0,5.0,10.0,shader, &Textura, 10.0,10.0);
 
-    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(200., 5.,0.3,10., &Particula);
+    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(400., 5.,0.3,10., &Particula);
 
     int Resolution[2];
 
@@ -145,7 +153,8 @@ int main(int argc, char **argv)
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if(mouse[2]) new ParticleAPI::ParticleSpawner((1.-((mouse[0]+1)/2))*Resolution[0], ((1.-(mouse[1]+1)/2))*Resolution[1],0.3,10., &Particula);
+
+        if(mouse[2]) new ParticleAPI::ParticleSpawner(((mouse[0]+1)/2)*Resolution[0], ((mouse[1]+1)/2)*Resolution[1],0.3,10., &Particula);
         
         particleManager->Update(after-current);
         particleManager->Draw(Resolution[0],Resolution[1]);
@@ -165,11 +174,11 @@ int main(int argc, char **argv)
         frame++;
         tempFrame++;
     }
-    std::cout
-    << " PCOUNT " << OpenGLAPI::SpriteRenderer::NumRenderer
-    << " PDCOUNT " <<ParticleAPI::ParticleObject::Pcount
-    << " CCOUNT " << ParticleAPI::Transform::numDeletes
-    << " CCOUNT " << ParticleAPI::Transform::numCreates;
+    // std::cout
+    // << " PCOUNT " << OpenGLAPI::SpriteRenderer::NumRenderer
+    // << " PDCOUNT " <<ParticleAPI::ParticleObject::Pcount
+    // << " CCOUNT " << ParticleAPI::Transform::numDeletes
+    // << " CCOUNT " << ParticleAPI::Transform::numCreates;
     free(data);
     OpenGLAPI::Terminate();
     return 0;

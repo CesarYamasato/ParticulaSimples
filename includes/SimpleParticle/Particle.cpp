@@ -266,7 +266,15 @@ using namespace ParticleAPI;
         }
     }
 
+    ParticleManager::~ParticleManager(){
+        std::list<ParticleSpawner*>::iterator it;
+        for(it = list.begin(); it != list.end(); ++it){
+            if(quantity){
+                deleteSpawner(it);
+            }
+        }
+    }
+
    ParticleManager::ParticleManager(){
-        manager = nullptr;
         quantity = 0;
     }

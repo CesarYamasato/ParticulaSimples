@@ -1,5 +1,6 @@
 #include "InputManager.hpp"
 #include "common.hpp"
+#include <iostream>
 
 using namespace OpenGLAPI;
 using namespace Manager;
@@ -11,12 +12,11 @@ InputManager * InputManager::getInputManager(){
     return manager;}
 
 
-void InputManager::setKey(void (*keyFunc)(int), int scanCode){
-    keyArray[scanCode] = keyFunc;}
+void InputManager::setKey(void (*keyFunc)(int), int key){
+    keyArray[key] = keyFunc;}
 
 
 void InputManager::Update(){
-    if (glfwGetKey(OpenGLAPI::window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(OpenGLAPI::window, true);
     getMouseValue();}
 
 
@@ -26,8 +26,11 @@ double * InputManager::getMouse(){
 InputManager::InputManager(){
     //Setting up for key callback functions
     keyArray = (void(**)(int)) malloc(sizeof(void(**)(int))*348);
-    for(int i = 0; i < 348; i ++) keyArray[i] = (void(*)(int)) malloc(sizeof(void(*)(int)));
-    glfwSetKeyCallback(OpenGLAPI::window, (void (*)(GLFWwindow*, int , int, int, int))&keyCallbackFunction);}
+    for(int i = 0; i < 348; i ++) keyArray[i] = NULL;
+    int index = glfwGetKeyScancode(GLFW_KEY_ESCAPE);
+    glfwSetKeyCallback(OpenGLAPI::window, (void (*)(GLFWwindow*, int , int, int, int))&keyCallbackFunction);
+    void (*escapeFunc)(int) = [](int){glfwSetWindowShouldClose(OpenGLAPI::window, true);};
+    setKey(escapeFunc, index);}
 
 
 void InputManager::getMouseValue(){
@@ -41,9 +44,11 @@ void InputManager::getMouseValue(){
     int width, height;
     glfwGetFramebufferSize(OpenGLAPI::window, &width, &height);
 
-    mouse[0] = ((mouse[0]*2.0)/width) -1.0;
-    mouse[1] = ((mouse[1]*2.0)/height) -1.0;}
+    mouse[0] = (((mouse[0]*2.0)/width) -1.0)*-1;
+    mouse[1] = (((mouse[1]*2.0)/height) -1.0)*-1;}
 
     GLFWkeyfun keyCallbackFunction(GLFWwindow* window, int key, int scancode, int action, int mods){
-        if(OpenGLAPI::Manager::InputManager::getInputManager()->keyArray[key] != NULL)
-        OpenGLAPI::Manager::InputManager::getInputManager()->keyArray[key](scancode);}
+        if(OpenGLAPI::Manager::InputManager::getInputManager()->keyArray[scancode] != NULL){
+                InputManager::getInputManager()->keyArray[scancode](scancode);
+            }
+        }

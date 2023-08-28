@@ -33,8 +33,6 @@ namespace OpenGLAPI{ namespace Manager{
 
         double mouse[4];
 
-        void* array;
-
         InputManager();
 
 

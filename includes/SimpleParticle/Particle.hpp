@@ -154,6 +154,8 @@ namespace ParticleAPI{
         //Function that is called every frame in order to draw the particles
         void Draw(int ResolutionX,int ResolutionY);
 
+        virtual ~ParticleManager();
+
         static int SpawnerCount;
 
         private:
