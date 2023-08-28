@@ -10,13 +10,12 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
 valgrind*
 *.bat
+includes/ParticleAPI/build/*
+includes/OpenGLAPI/build/*
+includes/glad.c
+orange.png
 
 # Local History for Visual Studio Code
 .history/

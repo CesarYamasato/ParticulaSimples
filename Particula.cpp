@@ -80,36 +80,8 @@ unsigned int indices[] = {
 //     }
 // };
 
-void handler(int sig) {
-  void *array[10];
-  size_t size;
-
-  // get void*'s for all entries on the stack
-  size = backtrace(array, 10);
-
-  // print out all the frames to stderr
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, STDERR_FILENO);
-  exit(1);
-}
-
-
-
 int main(int argc, char **argv)
 {
-   signal(SIGSEGV, handler);
-
-    if (__cplusplus == 201703L)
-        std::cout << "C++17" << std::endl;
-    else if (__cplusplus == 201402L)
-        std::cout << "C++14" << std::endl;
-    else if (__cplusplus == 201103L)
-        std::cout << "C++11" << std::endl;
-    else if (__cplusplus == 199711L)
-        std::cout << "C++98" << std::endl;
-    else
-        std::cout << "pre-standard C++" << std::endl;
-
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
