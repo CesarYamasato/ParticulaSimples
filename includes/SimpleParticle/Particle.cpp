@@ -147,7 +147,6 @@ using namespace ParticleAPI;
         float factor = rand()%2+(rand()%9)/10;
         float height = this->transform->getY();
         float windFactor = this->transform->getY() >= windHeight ? 1: (height/windHeight)*0.7;
-        if(windFactor)std::cout << windFactor <<std::endl;
         MoveableObject::move((windFactor*wind+random*factor*15*Width*signal)*deltaTime, Height*deltaTime*2);
     }
 

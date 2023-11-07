@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
-#include "stb_image/stb_image.h"
+#include "includes/stb_image/stb_image.h"
 #include "includes/SimpleParticle/Particle.hpp"
 
 #include <fstream>
