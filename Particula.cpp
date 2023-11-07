@@ -38,15 +38,15 @@ class FireworkParticle: public ParticleAPI::ParticleObject{
 
 };
 
-// class FireworkParticleSpawner: public ParticleAPI::ParticleSpawner{
-//     public:
-//     FireworkParticleSpawner(float x, float y, FireworkParticle* particle): ParticleSpawner(x,y,0,100,particle){
-
-//     }
-//     private:
-//     SpriteRenderer renderer;
-//     ParticleAPI::ParticleSpawner fireSpawner;
-// };
+class FireworkParticleSpawner: public ParticleAPI::ParticleSpawner{
+    public:
+    FireworkParticleSpawner(float x, float y, FireworkParticle* particle): ParticleSpawner(x,y,0,100,particle){
+        renderer = new SpriteRenderer();
+    }
+    private:
+    SpriteRenderer * renderer;
+    //ParticleAPI::ParticleSpawner fireSpawner;
+};
 
 // class WaterParticle: public ParticleAPI::ParticleObject{
 //     public:
@@ -103,17 +103,20 @@ int main(int argc, char **argv)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Shader * shader;
+    Shader * shaderSprite;
     std::string *shaderPath = new std::string(OpenGLAPI::GetPathTo("/Shaders/"));
     std::string vertexPath = *shaderPath + "ParticuleVertex2.vs";
     std::string fragmentPath = *shaderPath + "ParticleFragment.fs";
+    std::string fragmentPathSprite = *shaderPath + "Sprite.fs";
     shader = new Shader(vertexPath.c_str(), fragmentPath.c_str()); 
+    shaderSprite = new Shader(vertexPath.c_str(), fragmentPathSprite.c_str()); 
 
     std::string Waterfragment = *shaderPath + "WaterFragment.fs";
     Shader * waterShader = new Shader(vertexPath.c_str(), Waterfragment.c_str());     
 
     delete(shaderPath);
 
-    std::string imagePath = OpenGLAPI::GetPathTo("/skarmory.gif"); 
+    std::string imagePath = OpenGLAPI::GetPathTo("/campfire.png"); 
     int width, height, nrChannels;
     unsigned char *data = stbi_load(imagePath.c_str(), &width, &height, &nrChannels, 0);                       
 
@@ -123,9 +126,12 @@ int main(int argc, char **argv)
 
     ParticleAPI::ParticleManager* particleManager = ParticleAPI::ParticleManager::getParticleManager();
 
-    ParticleAPI::FireParticle Particula(10,10,5.0,5.0,10.0,shader, &Textura, 10.0,10.0);
+    ParticleAPI::FireParticle Particula(10,10,5.0,5.0,10.0, 400., 20., shader, &Textura, 15.0,15.0);
 
-    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(400., 5.,0.3,10., &Particula);
+    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(365, 270,0.3,500., &Particula);
+
+
+    SpriteRenderer * renderer = new SpriteRenderer(shaderSprite);
 
     int Resolution[2];
 
@@ -139,6 +145,8 @@ int main(int argc, char **argv)
     float old, newT;
     float diff = 0;
     old = glfwGetTime();
+
+    DebugManager::getDebugManager()->EnableDebug();
 
     ////////////////////
     //  RENDER LOOP   //
@@ -155,9 +163,10 @@ int main(int argc, char **argv)
 
 
         if(mouse[2]) new ParticleAPI::ParticleSpawner(((mouse[0]+1)/2)*Resolution[0], ((mouse[1]+1)/2)*Resolution[1],0.3,10., &Particula);
+
+        renderer->draw(400, 300, 100.0f, 100.0f, 1.0f, &Textura);
         
         particleManager->Update(after-current);
-        particleManager->Draw(Resolution[0],Resolution[1]);
 
         current = after;
         after = glfwGetTime();

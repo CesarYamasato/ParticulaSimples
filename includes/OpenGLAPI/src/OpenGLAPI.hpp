@@ -4,15 +4,22 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <filesystem>
-#include "../Shader.h"
+#include "../../Shader.h"
 #include "InputManager.hpp"
-#include "common.hpp"
+#include "../common.hpp"
 
 
 namespace OpenGLAPI{
+
+    ////////////////////////////////////////////////////////////////////////
+    enum class RENDER_TYPE {RECTANGLE, CIRCLE, TRIANGLE};
+
+    ////////////////////////////////////////////////////////////////////////
+    enum class COLOR {RED,BLUE,GREEN,YELLOW,PURPLE};
 
     int WindowShouldClose(GLFWwindow * window);
 
@@ -80,9 +87,11 @@ namespace OpenGLAPI{
 
     class SpriteRenderer{
         public:
+        SpriteRenderer();
+
         SpriteRenderer(Shader * shader);
 
-        void draw(OpenGLAPI::Texture* texture,int resolutionX, int resolutionY, float x, float y,float sizex,float sizey, float opacity);
+        void draw(float x, float y,float sizex,float sizey, float opacity, OpenGLAPI::Texture* texture = nullptr);
 
         ~SpriteRenderer();
 

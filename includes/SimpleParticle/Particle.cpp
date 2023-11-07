@@ -6,8 +6,8 @@ using namespace ParticleAPI;
     //////////////////////////////////////////////////////////////////////////////////////////////
     //TRANSFORM                                                                                 //
     //////////////////////////////////////////////////////////////////////////////////////////////
-     int Transform::numDeletes = 0;
-     int Transform::numCreates = 0;
+    int Transform::numDeletes = 0;
+    int Transform::numCreates = 0;
     Transform::Transform(float x, float y){
         this->x = x;
         this->y = y;
@@ -35,6 +35,9 @@ using namespace ParticleAPI;
     //MOVEABLE OBJECT                                                                           //
     //////////////////////////////////////////////////////////////////////////////////////////////
     int MoveableObject::count = 0;
+
+    //TODO: MUDAR FORMA COMO É CALCULADA VELOCIDADE E ACELERAÇÃO (RETIRAR TIME DOS PARÂMETROS OU ESCONDER DO USUÁRIO)
+    //REVAMP NO SISTEMA DE UPDATE 
 
     MoveableObject::MoveableObject(float X, float Y,float velX, float velY , float accX ,float accY , float mass){
         transform = new ParticleAPI::Transform(X,Y);
@@ -77,7 +80,7 @@ using namespace ParticleAPI;
     int ParticleObject::PDcount = 0;
     ParticleObject::ParticleObject(float x, float y, float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width):
     MoveableObject(x,y)
-    {
+    {   //TODO: ARRUMAR NOME DAS VARIÁVEIS
         float time = glfwGetTime();
         SpawnTime = time;
         TimeToLive = timeToLive;
@@ -102,10 +105,10 @@ using namespace ParticleAPI;
         return shoulddie;
     }
 
-    void ParticleObject::Draw(int ResolutionX, int ResolutionY) {
+    void ParticleObject::Draw() {
         float x = transform->getX();
         float y = transform->getY();
-        Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, 1.0);
+        Renderer->draw(x,y,Width,Height, 1.0, Texture);
     }
 
     bool ParticleObject::operator == (ParticleObject* other){
@@ -118,36 +121,39 @@ using namespace ParticleAPI;
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    FireParticle::FireParticle(float x, float y,float fadeIn,float fadeOut,float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
+    FireParticle::FireParticle(float x, float y,float fadeIn,float fadeOut,float timeToLive, float windHeight, float wind, Shader * shader, OpenGLAPI::Texture * texture, int height, int width)
     : ParticleObject(x, y, timeToLive, shader, texture, height, width)
-    {
+    { //TODO: ARRUMAR NOME DAS VARIÁVEIS
         FadeIn = fadeIn;
         FadeOut = fadeOut;
+        this->wind = wind;
+        this->windHeight = windHeight;
     }
 
-    void FireParticle::Draw (int ResolutionX, int ResolutionY){
+    void FireParticle::Draw (){
         float x = transform->getX();
         float y = transform->getY();
         float opacity = 1.0;
         float currentTime = glfwGetTime();
-        if(currentTime <= FadeIn+SpawnTime) opacity = 1.0-((FadeIn + SpawnTime -currentTime)/FadeIn);
-        else if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((currentTime - (SpawnTime + TimeToLive - FadeOut))/FadeOut);
+        if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((currentTime - (SpawnTime + TimeToLive - FadeOut))/FadeOut);
 
-        Renderer->draw(Texture,ResolutionX, ResolutionY,x,y,Width,Height, opacity);
+        Renderer->draw(x,y,Width,Height, opacity, Texture);
     }
 
     void FireParticle::Move(float deltaTime){
         //int time = static_cast<int>(OpenGLAPI::InputManager::getInputManager()->getTime());
         int random = rand()%2;
-        int signal = (rand()%2) - 1;
-        if(signal == 0) signal = 1;
-        MoveableObject::move(random*10*Width*signal*deltaTime, Height*deltaTime*2);
+        int signal = (rand()%2)*2 - 1;
+        float factor = rand()%2+(rand()%9)/10;
+        float height = this->transform->getY();
+        float windFactor = this->transform->getY() >= windHeight ? 1: (height/windHeight)*0.7;
+        if(windFactor)std::cout << windFactor <<std::endl;
+        MoveableObject::move((windFactor*wind+random*factor*15*Width*signal)*deltaTime, Height*deltaTime*2);
     }
 
     ParticleObject* FireParticle::Spawn(float x, float y){
         ParticleObject::Pcount++;
-        ParticleObject* particle = new FireParticle(x, y, FadeIn, FadeOut, TimeToLive, shader, Texture, Height, Width);
-        particle->MoveableObject::move(x,y);
+        ParticleObject* particle = new FireParticle(x, y, FadeIn, FadeOut, TimeToLive, windHeight, wind, shader, Texture, Height, Width);
         return particle;
     }
 
@@ -173,16 +179,15 @@ using namespace ParticleAPI;
             if((*it)->shoudlDie()){
                 delete(*it);
                 list.erase(it++);
-                //Dcount++;
                 continue;
             }
             (*it)->Move(deltaTime);
         }
     }
 
-    void ParticleSpawner::Draw(int ResolutionX,int ResolutionY){
+    void ParticleSpawner::Draw(){
         for(it = list.begin(); it != list.end(); ++it){
-            (*it)->Draw(ResolutionX, ResolutionY);
+            (*it)->Draw();
         }
     }
 
@@ -207,7 +212,7 @@ using namespace ParticleAPI;
         while(!list.empty()) {
             delete list.front();
             list.pop_front();
-         }
+        }
         list.clear();
     }
 
@@ -220,7 +225,7 @@ using namespace ParticleAPI;
     //PARTICLE MANAGER                                                                          //
     //////////////////////////////////////////////////////////////////////////////////////////////
      ParticleManager * ParticleManager::manager = nullptr;
-     int ParticleManager::SpawnerCount = 0;
+    int ParticleManager::SpawnerCount = 0;
 
     ParticleManager * ParticleManager::getParticleManager(){;
         if(!ParticleManager::manager) ParticleManager::manager = new ParticleManager();
@@ -253,16 +258,17 @@ using namespace ParticleAPI;
                 }
                 (*it)->Spawn();
                 (*it)->Update(deltaTime);
+                (*it)->Draw();
             }
             else break;
         }
     }
 
     //Function that is called every frame in order to draw the particles
-    void ParticleManager::Draw(int ResolutionX,int ResolutionY){
+    void ParticleManager::Draw(){
         std::list<ParticleSpawner*>::iterator it;
         for(it = list.begin(); it != list.end(); ++it){
-            (*it)->Draw(ResolutionX,ResolutionY);
+            (*it)->Draw();
         }
     }
 
@@ -275,6 +281,6 @@ using namespace ParticleAPI;
         }
     }
 
-   ParticleManager::ParticleManager(){
+    ParticleManager::ParticleManager(){
         quantity = 0;
     }

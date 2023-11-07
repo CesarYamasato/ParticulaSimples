@@ -12,7 +12,7 @@ CTestTestfile.cmake
 .vscode/*
 valgrind*
 *.bat
-includes/ParticleAPI/build/*
+includes/SimpleParticle/build/*
 includes/OpenGLAPI/build/*
 includes/glad.c
 orange.png

@@ -1,6 +1,4 @@
 #include "InputManager.hpp"
-#include "common.hpp"
-#include <iostream>
 
 using namespace OpenGLAPI;
 using namespace Manager;

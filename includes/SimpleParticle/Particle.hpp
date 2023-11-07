@@ -7,13 +7,8 @@
 #include <cstdlib>
 #include <list>
 #include "../Shader.h"
-#include "../OpenGLAPI/OpenGLAPI.hpp"
+#include "../OpenGLAPI/src/OpenGLAPI.hpp"
 
-////////////////////////////////////////////////////////////////////////
-enum class RENDER_TYPE {RECTANGLE, CIRCLE, TRIANGLE};
-
-////////////////////////////////////////////////////////////////////////
-enum class COLOR {RED,BLUE,GREEN,YELLOW,PURPLE};
 
 namespace ParticleAPI{
 
@@ -70,7 +65,7 @@ namespace ParticleAPI{
 
         bool shoudlDie();
 
-        virtual void Draw(int ResolutionX, int ResolutionY);
+        virtual void Draw();
 
         virtual void Move(float deltaTime) = 0;
 
@@ -91,9 +86,9 @@ namespace ParticleAPI{
 
     class FireParticle : public ParticleObject{
         public:
-        FireParticle(float x, float y, float fadeIn,float fadeOut,float timeToLive, Shader * shader, OpenGLAPI::Texture * texture, int height, int width);
+        FireParticle(float x, float y, float fadeIn,float fadeOut,float timeToLive, float windHeight, float wind, Shader * shader, OpenGLAPI::Texture * texture, int height, int width);
 
-        void Draw (int ResolutionX, int ResolutionY) override;
+        void Draw () override;
 
         void Move(float deltaTime) override;
 
@@ -101,7 +96,7 @@ namespace ParticleAPI{
 
         private:
 
-        float FadeIn, FadeOut;
+        float FadeIn, FadeOut, wind, windHeight;
 
     };
 
@@ -112,7 +107,7 @@ namespace ParticleAPI{
 
         virtual void Update(float deltaTime);
 
-        virtual void Draw(int ResolutionX,int ResolutionY);
+        virtual void Draw();
 
         bool checkTimeToLive();
 
@@ -151,9 +146,6 @@ namespace ParticleAPI{
         //Function that is called every frame in order to update position
         void Update(float deltaTime);
 
-        //Function that is called every frame in order to draw the particles
-        void Draw(int ResolutionX,int ResolutionY);
-
         virtual ~ParticleManager();
 
         static int SpawnerCount;
@@ -162,6 +154,9 @@ namespace ParticleAPI{
         int quantity;
         std::list<ParticleSpawner*> list;
         static ParticleManager * manager;
+
+        //Function that is called every frame in order to draw the particles
+        void Draw();
 
         ParticleManager();
     };

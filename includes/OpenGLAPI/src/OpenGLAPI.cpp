@@ -178,6 +178,14 @@ using namespace OpenGLAPI;
     //Classe para reenderizar sprites
         int SpriteRenderer::NumRenderer = 0;
         int SpriteRenderer::DelRenderer = 0;
+
+        SpriteRenderer::SpriteRenderer(){
+            this->shader = shader;
+            glGenVertexArrays(1,&quadVAO);
+            glGenBuffers(1, &VBO);
+            NumRenderer++;
+        }
+
         SpriteRenderer::SpriteRenderer(Shader * shader){
             this->shader = shader;
             glGenVertexArrays(1,&quadVAO);
@@ -185,30 +193,38 @@ using namespace OpenGLAPI;
             NumRenderer++;
         }
 
-        void SpriteRenderer::draw(OpenGLAPI::Texture* texture,int resolutionX, int resolutionY, float x, float y,float sizex,float sizey, float opacity){
+        void SpriteRenderer::draw(float x, float y,float sizex,float sizey, float opacity, OpenGLAPI::Texture* texture){
             initRenderData();
             this->shader->use();
             glm::mat4 model = glm::mat4(1.f);
 
-            glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(resolutionX), 
-            static_cast<float>(resolutionY), 0.0f, -1.0f, 1.0f);
+            int resolutionX, resolutionY;
 
-            model = glm::translate(model,glm::vec3(resolutionX - x/2,resolutionY - y/2, 0.0f));
+            glfwGetFramebufferSize(OpenGLAPI::window,&resolutionX, &resolutionY);
+
+            glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(resolutionX), static_cast<float>(resolutionY), 0.0f, -1.0f, 1.0f);
+            model = glm::translate(model,glm::vec3(resolutionX - x,resolutionY - y, 0.0f));
             model = glm::scale(model, glm::vec3(sizex, sizey, 1.0f));
+
+            double res[2] = {static_cast<float>(resolutionX), static_cast<float>(resolutionY)};
+            double center[2] = {x-sizex/2, y-sizey/2};
+            double size[2] = {sizex, sizey};
 
             this->shader->setMat4("model", model);
             this->shader->setMat4("projection", projection);
-            this->shader->setFloat("Opacity", opacity);
+            this->shader->setFloat("opacity", opacity);
+            this->shader->setVec2("resolution", res);
+            this->shader->setVec2("center", center);
+            this->shader->setVec2("size", size);
 
-            glActiveTexture(GL_TEXTURE0);
-            texture->bind();
-
-            this->shader->setSampler("Textura", 0);
+            if(texture != nullptr){
+                glActiveTexture(GL_TEXTURE0);
+                texture->bind();
+                this->shader->setSampler("Textura", 0);}
 
             glBindVertexArray(this->quadVAO);
             glDrawArrays(GL_TRIANGLES, 0, 6);
             glBindVertexArray(0);
-
         }
 
         void SpriteRenderer::initRenderData(){
@@ -235,5 +251,5 @@ using namespace OpenGLAPI;
         }
 
         SpriteRenderer::~SpriteRenderer(){
-           DelRenderer++;
+            DelRenderer++;
         }

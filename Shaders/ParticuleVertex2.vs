@@ -2,12 +2,22 @@
 layout (location = 0) in vec4 vertex;
 uniform mat4 model;
 uniform mat4 projection;
-uniform float Opacity;
-out float opacity;
-out vec2 pos;
+uniform float opacity;
+uniform vec2 resolution;
+uniform vec2 center;
+uniform vec2 size;
+out float Opacity;
+out vec2 Textpos;
+out vec2 Resolution;
+out vec2 Center;
+out vec2 Size;
+
 void main(){
-    pos = vertex.zw;
     //gl_Position = vec4(vertex.xy, 0.0, 1.0);
     gl_Position = projection * model * vec4(vertex.xy, 0.0,1.0);
-    opacity = Opacity;
+    Opacity = opacity;
+    Textpos = vertex.zw;
+    Resolution = resolution;
+    Center = center;
+    Size = size;
 }
