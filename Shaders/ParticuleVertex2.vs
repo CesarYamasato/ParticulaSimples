@@ -6,11 +6,13 @@ uniform float opacity;
 uniform vec2 resolution;
 uniform vec2 center;
 uniform vec2 size;
+uniform float time;
 out float Opacity;
 out vec2 Textpos;
 out vec2 Resolution;
 out vec2 Center;
 out vec2 Size;
+out float Time;
 
 void main(){
     //gl_Position = vec4(vertex.xy, 0.0, 1.0);
@@ -20,4 +22,5 @@ void main(){
     Resolution = resolution;
     Center = center;
     Size = size;
+    Time = time;
 }

@@ -94,11 +94,12 @@ namespace OpenGLAPI{
         void draw(float x, float y,float sizex,float sizey, float opacity, OpenGLAPI::Texture* texture = nullptr);
 
         ~SpriteRenderer();
-
+        
+        Shader * shader;
+        
         static int NumRenderer, DelRenderer;
 
         private:
-        Shader * shader;
         unsigned int quadVAO;
         unsigned int VBO;
 

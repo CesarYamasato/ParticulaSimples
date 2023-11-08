@@ -96,7 +96,7 @@ namespace ParticleAPI{
 
         private:
 
-        float FadeIn, FadeOut, wind, windHeight;
+        float FadeIn, FadeOut, wind, windHeight, seededTime;
 
     };
 

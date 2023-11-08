@@ -128,6 +128,7 @@ using namespace ParticleAPI;
         FadeOut = fadeOut;
         this->wind = wind;
         this->windHeight = windHeight;
+        this->seededTime = SpawnTime + rand()%30;
     }
 
     void FireParticle::Draw (){
@@ -136,7 +137,8 @@ using namespace ParticleAPI;
         float opacity = 1.0;
         float currentTime = glfwGetTime();
         if(currentTime >= SpawnTime+TimeToLive-FadeOut) opacity = 1.0-((currentTime - (SpawnTime + TimeToLive - FadeOut))/FadeOut);
-
+        this->shader->use();
+        this->shader->setFloat("time", seededTime);
         Renderer->draw(x,y,Width,Height, opacity, Texture);
     }
 
@@ -148,6 +150,7 @@ using namespace ParticleAPI;
         float height = this->transform->getY();
         float windFactor = this->transform->getY() >= windHeight ? 1: (height/windHeight)*0.7;
         MoveableObject::move((windFactor*wind+random*factor*15*Width*signal)*deltaTime, Height*deltaTime*2);
+        seededTime += deltaTime;
     }
 
     ParticleObject* FireParticle::Spawn(float x, float y){
