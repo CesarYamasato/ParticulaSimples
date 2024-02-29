@@ -81,7 +81,7 @@ namespace ParticleAPI{
         float SpawnTime, TimeToLive;
         Shader * shader;
         OpenGLAPI::Texture * Texture;
-        OpenGLAPI::SpriteRenderer * Renderer;
+        OpenGLAPI::Renderer::SpriteRenderer * Renderer;
     };
 
     class FireParticle : public ParticleObject{

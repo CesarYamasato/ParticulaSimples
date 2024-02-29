@@ -15,6 +15,7 @@
 
 using namespace OpenGLAPI;
 using namespace Manager;
+using namespace Renderer;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -99,6 +100,12 @@ int main(int argc, char **argv)
     
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
+    if(argc > 1){
+        if(!strcmp(argv[1], "--debug")){
+            DebugManager::getDebugManager()->EnableDebug();
+        }
+    }
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -126,9 +133,9 @@ int main(int argc, char **argv)
 
     ParticleAPI::ParticleManager* particleManager = ParticleAPI::ParticleManager::getParticleManager();
 
-    ParticleAPI::FireParticle Particula(10,10,5.0,5.0,10.0, 400., 20., shader, &Textura, 15.0,15.0);
+    ParticleAPI::FireParticle Particula(10,10,5.0,5.0,10.0, 300., 20., shader, &Textura, 20.0,20.0);
 
-    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(365, 270,0.3,500., &Particula);
+    ParticleAPI::ParticleSpawner* particleSpawner2 = new ParticleAPI::ParticleSpawner(365, 270,0.2,500., &Particula);
 
 
     SpriteRenderer * renderer = new SpriteRenderer(shaderSprite);
@@ -145,8 +152,6 @@ int main(int argc, char **argv)
     float old, newT;
     float diff = 0;
     old = glfwGetTime();
-
-    DebugManager::getDebugManager()->EnableDebug();
 
     ////////////////////
     //  RENDER LOOP   //

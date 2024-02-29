@@ -3,14 +3,13 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <filesystem>
-#include "../../Shader.h"
+#include "../includes/Shader.h"
 #include "InputManager.hpp"
-#include "../common.hpp"
+#include "common.hpp"
+#include "SpriteRenderer.hpp"
 
 
 namespace OpenGLAPI{
@@ -20,6 +19,8 @@ namespace OpenGLAPI{
 
     ////////////////////////////////////////////////////////////////////////
     enum class COLOR {RED,BLUE,GREEN,YELLOW,PURPLE};
+
+    Shader* spriteShader;
 
     int WindowShouldClose(GLFWwindow * window);
 
@@ -57,53 +58,6 @@ namespace OpenGLAPI{
         private:
 
         DebugManager();
-    };
-
-
-    //Classe para texturas
-    class Texture
-    {
-        public:
-        Texture(unsigned int Height,unsigned int Width, GLenum WrapParams_S = GL_REPEAT, GLenum WrapParams_T = GL_REPEAT, GLenum MagParams = GL_LINEAR, GLenum MinParams = GL_LINEAR, unsigned char* data = NULL);
-        
-        operator GLuint();
-
-        void bind();
-
-        unsigned int getID();
-
-        unsigned int getHeight();
-
-        unsigned int getWidth();
-        
-        private:
-        unsigned int textureID;
-        unsigned int Height;
-        unsigned int Width;
-        unsigned char* Data;
-    };
-
-    //Classe para reenderizar sprites
-
-    class SpriteRenderer{
-        public:
-        SpriteRenderer();
-
-        SpriteRenderer(Shader * shader);
-
-        void draw(float x, float y,float sizex,float sizey, float opacity, OpenGLAPI::Texture* texture = nullptr);
-
-        ~SpriteRenderer();
-        
-        Shader * shader;
-        
-        static int NumRenderer, DelRenderer;
-
-        private:
-        unsigned int quadVAO;
-        unsigned int VBO;
-
-        void initRenderData();
     };
 }
 #endif

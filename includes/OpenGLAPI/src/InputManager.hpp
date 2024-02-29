@@ -4,10 +4,10 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
-#include "../common.hpp"
+#include "common.hpp"
 #include <iostream>
 
-GLFWkeyfun keyCallbackFunction(GLFWwindow*, int, int, int, int);
+void keyCallbackFunction(GLFWwindow*, int, int, int, int);
 
 namespace OpenGLAPI{ namespace Manager{
     //Classe responsável por manejar input/informações externas ao programa

@@ -88,7 +88,7 @@ using namespace ParticleAPI;
         this->shader = shader;
         Texture = texture;
 
-        this->Renderer = new OpenGLAPI::SpriteRenderer(shader);
+        this->Renderer = new OpenGLAPI::Renderer::SpriteRenderer(shader);
 
         Width = width;
         Height = height;

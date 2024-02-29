@@ -45,8 +45,8 @@ void InputManager::getMouseValue(){
     mouse[0] = (((mouse[0]*2.0)/width) -1.0)*-1;
     mouse[1] = (((mouse[1]*2.0)/height) -1.0)*-1;}
 
-    GLFWkeyfun keyCallbackFunction(GLFWwindow* window, int key, int scancode, int action, int mods){
+    void keyCallbackFunction(GLFWwindow* window, int key, int scancode, int action, int mods){
         if(OpenGLAPI::Manager::InputManager::getInputManager()->keyArray[scancode] != NULL){
-                InputManager::getInputManager()->keyArray[scancode](scancode);
+                InputManager::getInputManager()->keyArray[scancode](action);
             }
         }
