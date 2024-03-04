@@ -140,6 +140,7 @@ using namespace ParticleAPI;
         this->shader->use();
         this->shader->setFloat("time", seededTime);
         Renderer->draw(x,y,Width,Height, opacity, Texture);
+
     }
 
     void FireParticle::Move(float deltaTime){

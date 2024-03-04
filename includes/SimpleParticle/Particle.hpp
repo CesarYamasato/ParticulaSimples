@@ -6,8 +6,8 @@
 #include <glm/glm.hpp>
 #include <cstdlib>
 #include <list>
-#include "../Shader.h"
-#include "../OpenGLAPI/src/OpenGLAPI.hpp"
+#include <Shader.h>
+#include "includes/OpenGLAPI/src/OpenGLAPI.hpp"
 
 
 namespace ParticleAPI{
